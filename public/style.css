@@ -1,0 +1,132 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #111;
+  overflow: hidden;
+  user-select: none;
+}
+.hidden { display: none !important; }
+
+/* --- Login --- */
+#loginScreen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #6ab04c, #4a90d9);
+}
+.loginBox {
+  background: rgba(255,255,255,0.95);
+  padding: 40px 50px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.loginBox h1 { margin-bottom: 20px; color: #2d5016; font-size: 32px; }
+.loginBox input {
+  display: block; width: 260px; padding: 10px 14px;
+  font-size: 16px; border: 2px solid #6ab04c; border-radius: 8px; margin-bottom: 14px;
+}
+.loginBox button {
+  padding: 10px 24px; font-size: 16px; font-weight: bold;
+  background: #6ab04c; color: white; border: none; border-radius: 8px; cursor: pointer;
+}
+.loginBox button:hover { background: #58a03c; }
+
+/* --- Game --- */
+#gameContainer { position: fixed; inset: 0; background: #000; }
+#gameCanvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+/* --- HUD --- */
+#hud {
+  position: fixed; top: 12px; left: 12px;
+  background: rgba(0,0,0,0.55); border-radius: 10px; padding: 10px 14px;
+  color: #fff; width: 220px; z-index: 10;
+}
+#hudName { font-weight: bold; margin-bottom: 6px; }
+.barRow { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 11px; }
+.barLabel { width: 24px; }
+.bar { flex: 1; height: 10px; background: #333; border-radius: 5px; overflow: hidden; }
+.barFill { height: 100%; width: 0%; transition: width 0.2s; }
+.hpFill { background: #e74c3c; }
+.mpFill { background: #3498db; }
+.expFill { background: #f1c40f; }
+.barText { width: 70px; text-align: right; font-size: 10px; }
+#hudGold { margin-top: 4px; font-size: 13px; }
+
+/* --- Skillbar --- */
+#skillBar {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 10;
+}
+.skillSlot {
+  width: 56px; height: 56px; background: rgba(0,0,0,0.6);
+  border: 2px solid #888; border-radius: 8px; color: #eee;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 10px; cursor: pointer;
+}
+.skillSlot span { font-weight: bold; font-size: 12px; color: #f1c40f; }
+.skillSlot:hover { border-color: #f1c40f; }
+.skillSlot.onCooldown { opacity: 0.4; }
+
+/* --- Chat --- */
+#chatBox {
+  position: fixed; bottom: 80px; left: 12px; width: 340px; z-index: 10;
+}
+#chatLog {
+  max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.45);
+  border-radius: 8px; padding: 6px 10px; margin-bottom: 6px; font-size: 12px; color: #eee;
+}
+#chatLog div { margin-bottom: 2px; }
+#chatInput {
+  width: 100%; padding: 6px 10px; border-radius: 6px; border: none;
+  background: rgba(0,0,0,0.5); color: #fff; font-size: 12px;
+}
+#chatInput::placeholder { color: #aaa; }
+
+/* --- Popups --- */
+#popupLayer {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 20; pointer-events: none;
+}
+.popupMsg {
+  background: rgba(0,0,0,0.7); color: #f1c40f; padding: 6px 16px;
+  border-radius: 20px; font-size: 13px; font-weight: bold;
+  animation: floatUp 2.5s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  15% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* --- Panels --- */
+.panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 360px; max-height: 70vh; overflow-y: auto;
+  background: rgba(20,20,30,0.95); border-radius: 12px; padding: 14px;
+  color: #eee; z-index: 30; border: 2px solid #555;
+}
+.panelHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: bold; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #555; padding-bottom: 8px;
+}
+.closeBtn { cursor: pointer; color: #e74c3c; font-weight: bold; }
+
+#equipRow { display: flex; gap: 10px; margin-bottom: 12px; }
+.equipSlot {
+  flex: 1; background: #2a2a3a; border: 1px dashed #666; border-radius: 8px;
+  padding: 10px; text-align: center; font-size: 12px; cursor: pointer;
+}
+#invGrid, #shopGrid, #jobGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.invItem, .shopItem, .jobCard {
+  background: #2a2a3a; border-radius: 8px; padding: 10px; font-size: 12px; cursor: pointer;
+  border: 1px solid #444;
+}
+.invItem:hover, .shopItem:hover, .jobCard:hover { border-color: #f1c40f; }
+.itemSwatch { width: 100%; height: 20px; border-radius: 4px; margin-bottom: 6px; }
+.itemActions { display: flex; gap: 4px; margin-top: 6px; }
+.itemActions button {
+  flex: 1; font-size: 10px; padding: 3px; border-radius: 4px; border: none; cursor: pointer;
+  background: #444; color: #fff;
+}
+.itemActions button:hover { background: #666; }
