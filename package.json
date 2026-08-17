@@ -2,9 +2,9 @@
   "name": "maple-clone",
   "version": "1.0.0",
   "description": "Browser MapleStory-Klon - Node.js WebSocket Server",
-  "main": "server/index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "ws": "^8.18.0"
