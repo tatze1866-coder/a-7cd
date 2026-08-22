@@ -25,9 +25,9 @@ const MAPS = {
       { x: 1950, y: 550, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
     ],
     mobSpawns: [
-      { type: 'snail', x: 400, y: 600, count: 3 },
+      { type: 'slime', x: 400, y: 600, count: 3 },
       { type: 'slime', x: 900, y: 600, count: 3 },
-      { type: 'snail', x: 1500, y: 600, count: 2 }
+      { type: 'slime', x: 1500, y: 600, count: 3 }
     ]
   },
 

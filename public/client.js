@@ -16,15 +16,35 @@ const camera = { x: 0, y: 0 };
 const keys = {};
 let chatOpen = false;
 
+// ====== Tileset laden ======
+// Sprite-Sheet: 3x3 Tiles à 16px. Reihen: 0=Gras-Oberkante, 1=Erde-Mitte, 2=Erde-Unterkante
+// Spalten: 0=links (Rand), 1=Mitte (wiederholbar), 2=rechts (Rand)
+const TILE_SRC = 16;
+const PLATFORM_TILE = 20; // gerenderte Tile-Größe in Weltkoordinaten
+const tilesetImg = new Image();
+let tilesetLoaded = false;
+tilesetImg.onload = () => { tilesetLoaded = true; };
+tilesetImg.src = 'assets/platform-tiles.png';
+
+// Slime-Spritesheet: 6 Farbreihen x 5 Frames (Stand, Walk1, Walk2, Attack, Dead), 32px, nur R-Facing (L wird gespiegelt)
+const SLIME_FRAME = 32;
+const SLIME_COLORS = 6;
+const slimeImg = new Image();
+let slimeLoaded = false;
+slimeImg.onload = () => { slimeLoaded = true; };
+slimeImg.src = 'assets/slime-sheet.png';
+
 // ====== Canvas Setup ======
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  ctx.imageSmoothingEnabled = false;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
+ctx.imageSmoothingEnabled = false;
 
 // ====== Login ======
 document.getElementById('joinBtn').addEventListener('click', joinGame);
@@ -172,7 +192,7 @@ function updateHud() {
   document.getElementById('mpText').textContent = `${me.mp}/${me.maxMp}`;
   document.getElementById('expBar').style.width = `${(me.exp / me.expNeeded) * 100}%`;
   document.getElementById('expText').textContent = `${me.exp}/${me.expNeeded}`;
-  document.getElementById('hudGold').textContent = `💰 ${me.gold}`;
+  document.getElementById('hudGold').lastChild.textContent = me.gold;
 }
 
 // ====== Panels ======
@@ -277,13 +297,7 @@ function render() {
   ctx.translate(-camera.x, -camera.y);
 
   // Plattformen
-  ctx.fillStyle = map.groundColor;
-  for (const p of map.platforms) {
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.fillRect(p.x, p.y, p.w, 4);
-    ctx.fillStyle = map.groundColor;
-  }
+  for (const p of map.platforms) drawPlatform(p);
 
   // Portale
   ctx.fillStyle = 'rgba(120, 200, 255, 0.55)';
@@ -314,11 +328,45 @@ function render() {
   drawBuffs();
 }
 
+function drawPlatform(p) {
+  if (!tilesetLoaded) {
+    // Fallback bevor das Bild geladen ist
+    ctx.fillStyle = '#6ab04c';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    return;
+  }
+
+  const cols = Math.ceil(p.w / PLATFORM_TILE);
+  const rows = Math.ceil(p.h / PLATFORM_TILE);
+
+  for (let r = 0; r < rows; r++) {
+    const srcRow = r === 0 ? 0 : 1; // Reihe 0 = Gras oben, ab Reihe 1 = Erde
+    const destY = p.y + r * PLATFORM_TILE;
+    const destH = Math.min(PLATFORM_TILE, p.y + p.h - destY);
+    const srcH = (destH / PLATFORM_TILE) * TILE_SRC;
+
+    for (let c = 0; c < cols; c++) {
+      const srcCol = cols === 1 ? 1 : (c === 0 ? 0 : (c === cols - 1 ? 2 : 1));
+      const destX = p.x + c * PLATFORM_TILE;
+      const destW = Math.min(PLATFORM_TILE, p.x + p.w - destX);
+      const srcW = (destW / PLATFORM_TILE) * TILE_SRC;
+
+      ctx.drawImage(
+        tilesetImg,
+        srcCol * TILE_SRC, srcRow * TILE_SRC, srcW, srcH,
+        destX, destY, destW, destH
+      );
+    }
+  }
+}
+
 function drawMob(m) {
+  if (!m.alive) return;
+  if (m.type === 'slime' && slimeLoaded) { drawSlimeSprite(m); return; }
+
   const def = MOB_COLORS[m.type] || { w: 32, h: 32 };
   const w = def.w, h = def.h;
   ctx.save();
-  if (!m.alive) { ctx.restore(); return; }
   ctx.fillStyle = m.hitFlash ? '#ffffff' : def.color;
   const x = m.x - w / 2, y = m.y - h;
   ctx.fillRect(x, y, w, h);
@@ -337,6 +385,45 @@ function drawMob(m) {
   ctx.textAlign = 'center';
   ctx.fillText(def.name, m.x, y - 14);
   ctx.restore();
+}
+
+function drawSlimeSprite(m) {
+  const renderSize = 40; // hochskaliert von 32px Quellgröße
+  const colorRow = m.id % SLIME_COLORS;
+  let frameCol = 0; // 0 = Stand
+  if (Math.abs(m.vx) > 0.05) {
+    frameCol = Math.floor(performance.now() / 220) % 2 === 0 ? 1 : 2; // Walk1/Walk2
+  }
+
+  const x = m.x - renderSize / 2;
+  const y = m.y - renderSize;
+
+  ctx.save();
+  if (m.hitFlash) ctx.filter = 'brightness(2.1) saturate(0.4)';
+  if (m.direction === -1) {
+    // Sprite ist nur als "R"-Blickrichtung vorhanden -> für Links spiegeln
+    ctx.translate(m.x, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-m.x, 0);
+  }
+  ctx.drawImage(
+    slimeImg,
+    frameCol * SLIME_FRAME, colorRow * SLIME_FRAME, SLIME_FRAME, SLIME_FRAME,
+    x, y, renderSize, renderSize
+  );
+  ctx.restore();
+
+  // HP-Balken
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(x, y - 10, renderSize, 5);
+  ctx.fillStyle = '#e74c3c';
+  ctx.fillRect(x, y - 10, renderSize * (m.hp / m.maxHp), 5);
+
+  // Name
+  ctx.fillStyle = '#fff';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Slime', m.x, y - 14);
 }
 
 const MOB_COLORS = {
