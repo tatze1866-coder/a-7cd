@@ -5,29 +5,33 @@ const MAPS = {
   henesys: {
     id: 'henesys',
     name: 'Henesys Field',
-    worldWidth: 2000,
-    worldHeight: 800,
+    worldWidth: 3200,
+    worldHeight: 900,
     bgColor: '#8fd0ff',
     groundColor: '#6ab04c',
     platforms: [
-      { x: 0, y: 650, w: 2000, h: 150 },       // Boden
+      { x: 0, y: 650, w: 3200, h: 250 },       // Boden
       { x: 300, y: 500, w: 250, h: 20 },       // schwebende Plattform
       { x: 650, y: 420, w: 200, h: 20 },
       { x: 1000, y: 500, w: 250, h: 20 },
       { x: 1400, y: 400, w: 220, h: 20 },
-      { x: 1700, y: 550, w: 200, h: 20 }
+      { x: 1700, y: 550, w: 200, h: 20 },
+      { x: 2000, y: 460, w: 220, h: 20 },
+      { x: 2350, y: 530, w: 250, h: 20 },
+      { x: 2700, y: 420, w: 220, h: 20 },
+      { x: 3000, y: 550, w: 180, h: 20 }
     ],
     spawnPoints: {
       default: { x: 100, y: 600 },
-      fromKerning: { x: 1900, y: 600 }
+      fromKerning: { x: 3100, y: 600 }
     },
     portals: [
-      { x: 1950, y: 550, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
+      { x: 3150, y: 550, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
     ],
     mobSpawns: [
-      { type: 'slime', x: 400, y: 600, count: 3 },
-      { type: 'slime', x: 900, y: 600, count: 3 },
-      { type: 'slime', x: 1500, y: 600, count: 3 }
+      { type: 'slime', x: 500, y: 600, count: 9 },
+      { type: 'slime', x: 1600, y: 600, count: 9 },
+      { type: 'slime', x: 2700, y: 600, count: 9 }
     ]
   },
 
