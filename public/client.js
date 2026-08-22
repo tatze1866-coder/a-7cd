@@ -41,6 +41,12 @@ const PLAYER_IDLE_ROW = 0;
 const PLAYER_IDLE_FRAMES = 6;
 const PLAYER_WALK_ROW = 1;
 const PLAYER_WALK_FRAMES = 8;
+// Angriffs-Animation: Reihe 9 = Aufladen/Zauber wirken (10 Frames), Reihe 10 = Entladen/Ausklingen (10 Frames)
+const PLAYER_ATTACK_ROW_A = 9;
+const PLAYER_ATTACK_ROW_B = 10;
+const PLAYER_ATTACK_FRAMES = 10;
+const ATTACK_ANIM_MS = 450; // muss zur Server-Konstante ATTACK_ANIM_MS passen
+const attackAnims = {}; // playerId -> { start, wasAttacking }
 const playerImg = new Image();
 let playerImgLoaded = false;
 playerImg.onload = () => { playerImgLoaded = true; };
@@ -125,11 +131,13 @@ function onMessage(evt) {
 window.addEventListener('keydown', e => {
   if (chatOpen) return;
   keys[e.key.toLowerCase()] = true;
-  if (e.key === 'z' || e.key === 'Z') sendAction({ type: 'attack' });
-  if (e.key === '1') sendAction({ type: 'skill', key: firstSkillKey(0) });
-  if (e.key === '2') sendAction({ type: 'skill', key: firstSkillKey(1) });
-  if (e.key.toLowerCase() === 'i') togglePanel('inventoryPanel');
-  if (e.key.toLowerCase() === 'j') togglePanel('jobPanel');
+  const k = e.key.toLowerCase();
+  if (k === 'q') sendAction({ type: 'attack' });
+  if (k === 'w') sendAction({ type: 'skill', key: firstSkillKey(0) });
+  if (k === 'e') sendAction({ type: 'skill', key: firstSkillKey(1) });
+  if (k === 'r') sendAction({ type: 'skill', key: firstSkillKey(2) });
+  if (k === 'i') togglePanel('inventoryPanel');
+  if (k === 'j') togglePanel('jobPanel');
 });
 window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
@@ -148,7 +156,7 @@ function sendInput() {
     type: 'input',
     left: !!keys['arrowleft'] || !!keys['a'],
     right: !!keys['arrowright'] || !!keys['d'],
-    up: !!keys['arrowup'] || !!keys['w'] || !!keys[' ']
+    up: !!keys['arrowup'] || !!keys[' ']
   }));
 }
 function sendAction(obj) { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj)); }
@@ -229,11 +237,13 @@ function refreshSkillLabels() {
   const me = players.find(p => p.id === myId);
   if (!me) return;
   const job = jobs[me.job];
-  const keys = job && job.skills ? Object.keys(job.skills) : [];
+  const jobKeys = job && job.skills ? Object.keys(job.skills) : [];
   const slot1 = document.getElementById('slot1');
   const slot2 = document.getElementById('slot2');
-  slot1.lastChild.textContent = keys[0] ? job.skills[keys[0]].name : '—';
-  slot2.lastChild.textContent = keys[1] ? job.skills[keys[1]].name : '—';
+  const slot3 = document.getElementById('slot3');
+  slot1.lastChild.textContent = jobKeys[0] ? job.skills[jobKeys[0]].name : '—';
+  slot2.lastChild.textContent = jobKeys[1] ? job.skills[jobKeys[1]].name : '—';
+  slot3.lastChild.textContent = jobKeys[2] ? job.skills[jobKeys[2]].name : '—';
 }
 
 function renderInventoryPanel() {
@@ -498,18 +508,41 @@ function drawPlayer(p, isMe) {
 
 function drawPlayerSprite(p, isMe) {
   const renderSize = 48; // hochskaliert von 32px Quellgröße
+  const now = performance.now();
+
+  // Angriffs-Animation tracken (Übergang false->true = neuer Angriff gestartet)
+  let anim = attackAnims[p.id];
+  if (p.attackFlash) {
+    if (!anim || !anim.active) {
+      anim = attackAnims[p.id] = { start: now, active: true };
+    }
+  } else if (anim) {
+    anim.active = false;
+  }
+
+  let row, frameCount, frameCol;
   const isWalking = Math.abs(p.vx || 0) > 0.05 && p.onGround;
-  const row = isWalking ? PLAYER_WALK_ROW : PLAYER_IDLE_ROW;
-  const frameCount = isWalking ? PLAYER_WALK_FRAMES : PLAYER_IDLE_FRAMES;
-  const speedMs = isWalking ? 100 : 220;
-  const frameCol = Math.floor(performance.now() / speedMs) % frameCount;
+  const attackElapsed = anim ? now - anim.start : Infinity;
+  const isAttacking = attackElapsed < ATTACK_ANIM_MS;
+
+  if (isAttacking) {
+    const progress = attackElapsed / ATTACK_ANIM_MS; // 0..1 über beide Reihen (20 Frames)
+    const globalFrame = Math.min(PLAYER_ATTACK_FRAMES * 2 - 1, Math.floor(progress * PLAYER_ATTACK_FRAMES * 2));
+    row = globalFrame < PLAYER_ATTACK_FRAMES ? PLAYER_ATTACK_ROW_A : PLAYER_ATTACK_ROW_B;
+    frameCol = globalFrame % PLAYER_ATTACK_FRAMES;
+    frameCount = PLAYER_ATTACK_FRAMES;
+  } else {
+    row = isWalking ? PLAYER_WALK_ROW : PLAYER_IDLE_ROW;
+    frameCount = isWalking ? PLAYER_WALK_FRAMES : PLAYER_IDLE_FRAMES;
+    const speedMs = isWalking ? 100 : 220;
+    frameCol = Math.floor(now / speedMs) % frameCount;
+  }
 
   const x = p.x - renderSize / 2;
   const y = p.y - renderSize;
 
   ctx.save();
   if (!p.alive) ctx.globalAlpha = 0.3;
-  if (p.attackFlash) ctx.filter = 'brightness(2.2) saturate(0.3)';
 
   if (p.facing === -1) {
     // Sprite ist nur als "R"-Blickrichtung vorhanden -> für Links spiegeln

@@ -15,7 +15,8 @@ const JOBS = {
     attackRange: 50,
     skills: {
       slash: { name: 'Power Slash', mpCost: 5, cooldown: 1500, damageMult: 1.8, range: 60 },
-      rage: { name: 'Rage', mpCost: 15, cooldown: 8000, buffDuration: 10000, damageMult: 1.4 }
+      rage: { name: 'Rage', mpCost: 15, cooldown: 8000, buffDuration: 10000, damageMult: 1.4 },
+      cleave: { name: 'Cleave', mpCost: 9, cooldown: 3500, damageMult: 2.2, range: 65 }
     }
   },
   bowmaster: {
@@ -25,7 +26,8 @@ const JOBS = {
     attackRange: 350,
     skills: {
       arrowShot: { name: 'Double Shot', mpCost: 6, cooldown: 1200, damageMult: 1.6, range: 350, projectile: true },
-      focus: { name: 'Focus', mpCost: 12, cooldown: 10000, buffDuration: 8000, damageMult: 1.3 }
+      focus: { name: 'Focus', mpCost: 12, cooldown: 10000, buffDuration: 8000, damageMult: 1.3 },
+      snipe: { name: 'Snipe', mpCost: 16, cooldown: 5000, damageMult: 2.6, range: 420, projectile: true }
     }
   },
   thief: {
@@ -35,7 +37,8 @@ const JOBS = {
     attackRange: 45,
     skills: {
       disorder: { name: 'Lucky Seven', mpCost: 5, cooldown: 900, damageMult: 1.5, range: 50 },
-      haste: { name: 'Haste', mpCost: 10, cooldown: 12000, buffDuration: 10000, speedMult: 1.5 }
+      haste: { name: 'Haste', mpCost: 10, cooldown: 12000, buffDuration: 10000, speedMult: 1.5 },
+      backstab: { name: 'Backstab', mpCost: 9, cooldown: 4000, damageMult: 2.4, range: 50 }
     }
   },
   priest: {
@@ -45,7 +48,8 @@ const JOBS = {
     attackRange: 300,
     skills: {
       bolt: { name: 'Holy Bolt', mpCost: 8, cooldown: 1400, damageMult: 1.7, range: 300, projectile: true },
-      heal: { name: 'Heal', mpCost: 20, cooldown: 6000, healAmount: 40 }
+      heal: { name: 'Heal', mpCost: 20, cooldown: 6000, healAmount: 40 },
+      bless: { name: 'Bless', mpCost: 12, cooldown: 9000, buffDuration: 9000, damageMult: 1.3 }
     }
   }
 };

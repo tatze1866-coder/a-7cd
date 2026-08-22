@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 const TICK_MS = 50;
 const MOVE_SPEED = 3.2;
 const BASE_ATTACK_COOLDOWN = 550;
+const ATTACK_ANIM_MS = 450; // Dauer der Angriffs-Sprite-Animation im Client
 
 // --- Statischer Fileserver für den Client ---
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -210,7 +211,7 @@ function handleAttack(player) {
   const now = Date.now();
   if (now - player.lastAttackAt < BASE_ATTACK_COOLDOWN) return;
   player.lastAttackAt = now;
-  player.attackFlashUntil = now + 200;
+  player.attackFlashUntil = now + ATTACK_ANIM_MS;
 
   const range = player.jobData().attackRange;
   const mob = nearestMobInRange(player, range);
@@ -233,7 +234,7 @@ function handleSkill(player, key) {
 
   player.mp -= skill.mpCost;
   player.skillCooldowns[key] = now + skill.cooldown;
-  player.attackFlashUntil = now + 250;
+  player.attackFlashUntil = now + ATTACK_ANIM_MS;
 
   if (skill.healAmount) {
     player.hp = Math.min(player.maxHp, player.hp + skill.healAmount);

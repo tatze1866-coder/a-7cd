@@ -15,9 +15,9 @@ Mehrere Browser-Tabs/Geräte im selben Netzwerk = Multiplayer (Server-IP statt l
 
 ## Steuerung
 
-- **Pfeiltasten / WASD** – Bewegen & Springen (hoch = springen)
-- **Z** – Normalangriff
-- **1 / 2** – Skill 1 / Skill 2 (abhängig vom Job)
+- **Pfeiltasten / A,D** – Bewegen, **Pfeil hoch / Leertaste** – Springen
+- **Q** – Normalangriff
+- **W / E / R** – Skill 1 / 2 / 3 (abhängig vom Job)
 - **I** – Inventar
 - **J** – Job wählen (ab Level 3)
 - **Enter** – Chat öffnen/senden
@@ -25,7 +25,7 @@ Mehrere Browser-Tabs/Geräte im selben Netzwerk = Multiplayer (Server-IP statt l
 ## Inhalt (aktueller Stand)
 
 - 3 Maps mit Portalen: Henesys Field → Kerning Forest → Sleepywood Dungeon
-- 4 Jobs (ab Level 3 wählbar): Warrior, Bowmaster, Thief, Priest – je 2 Skills
+- 4 Jobs (ab Level 3 wählbar): Warrior, Bowmaster, Thief, Priest – je 3 Skills
 - 6 Mob-Typen mit einfacher KI (Wandern / Aggro-Chase), Respawn-Timer
 - Inventar, Equipment (Waffe/Rüstung), Loot-Tabellen pro Mob
 - Leveling mit EXP-Kurve, HP/MP-Wachstum
