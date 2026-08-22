@@ -6,11 +6,11 @@ const MAPS = {
     id: 'henesys',
     name: 'Henesys Field',
     worldWidth: 3200,
-    worldHeight: 900,
+    worldHeight: 1400,
     bgColor: '#8fd0ff',
     groundColor: '#6ab04c',
     platforms: [
-      { x: 0, y: 650, w: 3200, h: 250 },       // Boden
+      { x: 0, y: 650, w: 3200, h: 750 },       // Boden (bis ganz nach unten, kein "Schweben" mehr)
       { x: 300, y: 500, w: 250, h: 20 },       // schwebende Plattform
       { x: 650, y: 420, w: 200, h: 20 },
       { x: 1000, y: 500, w: 250, h: 20 },
@@ -29,9 +29,20 @@ const MAPS = {
       { x: 3150, y: 550, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
     ],
     mobSpawns: [
-      { type: 'slime', x: 500, y: 600, count: 9 },
-      { type: 'slime', x: 1600, y: 600, count: 9 },
-      { type: 'slime', x: 2700, y: 600, count: 9 }
+      // Boden
+      { type: 'slime', x: 500, y: 600, count: 8 },
+      { type: 'slime', x: 1600, y: 600, count: 8 },
+      { type: 'slime', x: 2700, y: 600, count: 8 },
+      // Auf den schwebenden Plattformen
+      { type: 'slime', x: 425, y: 500, count: 2 },
+      { type: 'slime', x: 750, y: 420, count: 1 },
+      { type: 'slime', x: 1125, y: 500, count: 2 },
+      { type: 'slime', x: 1510, y: 400, count: 2 },
+      { type: 'slime', x: 1800, y: 550, count: 1 },
+      { type: 'slime', x: 2110, y: 460, count: 2 },
+      { type: 'slime', x: 2475, y: 530, count: 2 },
+      { type: 'slime', x: 2810, y: 420, count: 2 },
+      { type: 'slime', x: 3090, y: 550, count: 1 }
     ]
   },
 
