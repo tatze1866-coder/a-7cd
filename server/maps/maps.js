@@ -5,44 +5,44 @@ const MAPS = {
   henesys: {
     id: 'henesys',
     name: 'Henesys Field',
-    worldWidth: 3200,
-    worldHeight: 1400,
+    worldWidth: 2600,
+    worldHeight: 1000,
     bgColor: '#8fd0ff',
     groundColor: '#6ab04c',
     platforms: [
-      { x: 0, y: 650, w: 3200, h: 750 },       // Boden (bis ganz nach unten, kein "Schweben" mehr)
-      { x: 300, y: 500, w: 250, h: 20 },       // schwebende Plattform
-      { x: 650, y: 420, w: 200, h: 20 },
-      { x: 1000, y: 500, w: 250, h: 20 },
-      { x: 1400, y: 400, w: 220, h: 20 },
-      { x: 1700, y: 550, w: 200, h: 20 },
-      { x: 2000, y: 460, w: 220, h: 20 },
-      { x: 2350, y: 530, w: 250, h: 20 },
-      { x: 2700, y: 420, w: 220, h: 20 },
-      { x: 3000, y: 550, w: 180, h: 20 }
+      { x: 0, y: 800, w: 2600, h: 200 },       // Boden (normal dick, aber nach unten verschoben)
+      { x: 200, y: 650, w: 220, h: 20 },       // schwebende Plattform
+      { x: 460, y: 580, w: 200, h: 20 },
+      { x: 720, y: 650, w: 220, h: 20 },
+      { x: 980, y: 560, w: 200, h: 20 },
+      { x: 1240, y: 700, w: 200, h: 20 },
+      { x: 1500, y: 610, w: 200, h: 20 },
+      { x: 1760, y: 680, w: 220, h: 20 },
+      { x: 2020, y: 570, w: 200, h: 20 },
+      { x: 2280, y: 650, w: 180, h: 20 }
     ],
     spawnPoints: {
-      default: { x: 100, y: 600 },
-      fromKerning: { x: 3100, y: 600 }
+      default: { x: 100, y: 800 },
+      fromKerning: { x: 2500, y: 800 }
     },
     portals: [
-      { x: 3150, y: 550, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
+      { x: 2550, y: 700, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
     ],
     mobSpawns: [
       // Boden
-      { type: 'slime', x: 500, y: 600, count: 8 },
-      { type: 'slime', x: 1600, y: 600, count: 8 },
-      { type: 'slime', x: 2700, y: 600, count: 8 },
+      { type: 'slime', x: 400, y: 800, count: 8 },
+      { type: 'slime', x: 1300, y: 800, count: 8 },
+      { type: 'slime', x: 2200, y: 800, count: 8 },
       // Auf den schwebenden Plattformen
-      { type: 'slime', x: 425, y: 500, count: 2 },
-      { type: 'slime', x: 750, y: 420, count: 1 },
-      { type: 'slime', x: 1125, y: 500, count: 2 },
-      { type: 'slime', x: 1510, y: 400, count: 2 },
-      { type: 'slime', x: 1800, y: 550, count: 1 },
-      { type: 'slime', x: 2110, y: 460, count: 2 },
-      { type: 'slime', x: 2475, y: 530, count: 2 },
-      { type: 'slime', x: 2810, y: 420, count: 2 },
-      { type: 'slime', x: 3090, y: 550, count: 1 }
+      { type: 'slime', x: 310, y: 650, count: 2 },
+      { type: 'slime', x: 560, y: 580, count: 1 },
+      { type: 'slime', x: 830, y: 650, count: 2 },
+      { type: 'slime', x: 1080, y: 560, count: 2 },
+      { type: 'slime', x: 1340, y: 700, count: 1 },
+      { type: 'slime', x: 1600, y: 610, count: 2 },
+      { type: 'slime', x: 1870, y: 680, count: 2 },
+      { type: 'slime', x: 2120, y: 570, count: 2 },
+      { type: 'slime', x: 2370, y: 650, count: 1 }
     ]
   },
 

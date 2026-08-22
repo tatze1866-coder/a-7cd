@@ -13,6 +13,7 @@ let myInventory = [];
 let myBuffs = [];
 
 const camera = { x: 0, y: 0 };
+const ZOOM = 1.4; // Reinzoomen, damit die (jetzt kleinere) Map den Bildschirm füllt
 const keys = {};
 let chatOpen = false;
 
@@ -33,6 +34,17 @@ const slimeImg = new Image();
 let slimeLoaded = false;
 slimeImg.onload = () => { slimeLoaded = true; };
 slimeImg.src = 'assets/slime-sheet.png';
+
+// Spieler-Spritesheet (Satyr): 32px Frames, Reihe 0 = Idle (6 Frames), Reihe 1 = Walk (8 Frames), nur R-Facing (L wird gespiegelt)
+const PLAYER_FRAME = 32;
+const PLAYER_IDLE_ROW = 0;
+const PLAYER_IDLE_FRAMES = 6;
+const PLAYER_WALK_ROW = 1;
+const PLAYER_WALK_FRAMES = 8;
+const playerImg = new Image();
+let playerImgLoaded = false;
+playerImg.onload = () => { playerImgLoaded = true; };
+playerImg.src = 'assets/player-sheet.png';
 
 // ====== Canvas Setup ======
 const canvas = document.getElementById('gameCanvas');
@@ -284,16 +296,21 @@ function render() {
 
   refreshSkillLabels();
 
+  // Sichtbarer Weltausschnitt unter Berücksichtigung des Zooms
+  const viewW = canvas.width / ZOOM;
+  const viewH = canvas.height / ZOOM;
+
   // Kamera folgt dem eigenen Spieler
   if (me) {
-    camera.x = clamp(me.x - canvas.width / 2, 0, Math.max(0, map.worldWidth - canvas.width));
-    camera.y = clamp(me.y - canvas.height / 2, 0, Math.max(0, map.worldHeight - canvas.height));
+    camera.x = clamp(me.x - viewW / 2, 0, Math.max(0, map.worldWidth - viewW));
+    camera.y = clamp(me.y - viewH / 2, 0, Math.max(0, map.worldHeight - viewH));
   }
 
   ctx.fillStyle = map.bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.save();
+  ctx.scale(ZOOM, ZOOM);
   ctx.translate(-camera.x, -camera.y);
 
   // Plattformen
@@ -436,6 +453,9 @@ const MOB_COLORS = {
 };
 
 function drawPlayer(p, isMe) {
+  if (playerImgLoaded) { drawPlayerSprite(p, isMe); return; }
+
+  // Fallback bevor das Sprite geladen ist
   const job = jobs[p.job] || { color: '#ccc' };
   const w = 26, h = 44;
   const x = p.x - w / 2, y = p.y - h;
@@ -474,6 +494,56 @@ function drawPlayer(p, isMe) {
   }
 
   ctx.restore();
+}
+
+function drawPlayerSprite(p, isMe) {
+  const renderSize = 48; // hochskaliert von 32px Quellgröße
+  const isWalking = Math.abs(p.vx || 0) > 0.05 && p.onGround;
+  const row = isWalking ? PLAYER_WALK_ROW : PLAYER_IDLE_ROW;
+  const frameCount = isWalking ? PLAYER_WALK_FRAMES : PLAYER_IDLE_FRAMES;
+  const speedMs = isWalking ? 100 : 220;
+  const frameCol = Math.floor(performance.now() / speedMs) % frameCount;
+
+  const x = p.x - renderSize / 2;
+  const y = p.y - renderSize;
+
+  ctx.save();
+  if (!p.alive) ctx.globalAlpha = 0.3;
+  if (p.attackFlash) ctx.filter = 'brightness(2.2) saturate(0.3)';
+
+  if (p.facing === -1) {
+    // Sprite ist nur als "R"-Blickrichtung vorhanden -> für Links spiegeln
+    ctx.translate(p.x, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-p.x, 0);
+  }
+  ctx.drawImage(
+    playerImg,
+    frameCol * PLAYER_FRAME, row * PLAYER_FRAME, PLAYER_FRAME, PLAYER_FRAME,
+    x, y, renderSize, renderSize
+  );
+  ctx.restore();
+
+  // Waffenanzeige
+  if (p.equipment && p.equipment.weapon && items[p.equipment.weapon]) {
+    ctx.fillStyle = items[p.equipment.weapon].color;
+    const wx = p.facing === 1 ? x + renderSize : x - 14;
+    ctx.fillRect(wx, y + 20, 14, 5);
+  }
+
+  // Name + Level
+  ctx.fillStyle = isMe ? '#f1c40f' : '#fff';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${p.name} Lv.${p.level}`, p.x, y - 8);
+
+  // HP-Balken über anderen Spielern
+  if (!isMe) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(x, y - 6, renderSize, 4);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillRect(x, y - 6, renderSize * (p.hp / p.maxHp), 4);
+  }
 }
 
 function drawBuffs() {

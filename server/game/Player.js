@@ -146,6 +146,7 @@ class Player {
       x: this.x,
       y: this.y,
       facing: this.facing,
+      vx: this.vx,
       onGround: this.onGround,
       alive: this.alive,
       attackFlash: Date.now() < this.attackFlashUntil,
