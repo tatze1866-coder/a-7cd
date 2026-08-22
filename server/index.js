@@ -19,7 +19,7 @@ const ATTACK_ANIM_MS = 450; // Dauer der Angriffs-Sprite-Animation im Client
 
 // --- Statischer Fileserver für den Client ---
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.mp3': 'audio/mpeg' };
 
 const server = http.createServer((req, res) => {
   let filePath = req.url === '/' ? '/index.html' : req.url;

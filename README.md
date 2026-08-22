@@ -20,6 +20,7 @@ Mehrere Browser-Tabs/Geräte im selben Netzwerk = Multiplayer (Server-IP statt l
 - **W / E / R** – Skill 1 / 2 / 3 (abhängig vom Job)
 - **I** – Inventar
 - **J** – Job wählen (ab Level 3)
+- **K** – Händler (Shop)
 - **Enter** – Chat öffnen/senden
 
 ## Inhalt (aktueller Stand)
@@ -28,9 +29,11 @@ Mehrere Browser-Tabs/Geräte im selben Netzwerk = Multiplayer (Server-IP statt l
 - 4 Jobs (ab Level 3 wählbar): Warrior, Bowmaster, Thief, Priest – je 3 Skills
 - 6 Mob-Typen mit einfacher KI (Wandern / Aggro-Chase), Respawn-Timer
 - Inventar, Equipment (Waffe/Rüstung), Loot-Tabellen pro Mob
+- Händler-Panel (Kaufen/Verkaufen) mit dem Shop-Sortiment pro Job
 - Leveling mit EXP-Kurve, HP/MP-Wachstum
 - Server-autoritative Physik (Gravity, Plattform-Kollision, one-way Plattformen)
 - Chat pro Map
+- UI-Soundeffekte (Buttons, Panels, Kauf/Verkauf, Levelup, Tod, Job-Wechsel, Chat)
 
 ## Architektur
 
@@ -48,6 +51,10 @@ public/
   client.js           Networking, Canvas-Rendering, Input
   style.css           Styling
 ```
+
+## Credits
+
+UI-Soundeffekte: "Cute & Cozy UI Audio" von Case Portman (caseportmanaudio.com), Free-Sample-Pack, Lizenz erfordert Namensnennung – siehe `public/assets/sfx/`.
 
 ## Nächste Schritte (Ideen)
 

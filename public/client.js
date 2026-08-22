@@ -1,3 +1,37 @@
+// ====== Sound-Engine (Cute & Cozy UI Audio) ======
+// Alle SFX vorab laden + über eine kleine Pool-Funktion abspielen, damit
+// schnell hintereinander ausgelöste Sounds sich nicht gegenseitig abwürgen.
+const SFX_FILES = {
+  buttonPressed: 'Button_Pressed', cancel: 'Cancel',
+  clickedIn: 'Clicked_In', clickedOut: 'Clicked_Out',
+  confirm: 'Confirm', currency: 'Currency',
+  dialogueBlip: 'Dialogue_Blip', dialogueExpression: 'Dialogue_Expression',
+  failure: 'Failure', highlight: 'Highlight', lock: 'Lock',
+  menuClose: 'Menu_Close', menuOpen: 'Menu_Open',
+  purchase: 'Purchase', sell: 'Sell', success: 'Success',
+  unlock: 'Unlock', warning: 'Warning'
+};
+const sfxBuffers = {};
+for (const key of Object.keys(SFX_FILES)) {
+  const audio = new Audio(`assets/sfx/${SFX_FILES[key]}.mp3`);
+  audio.preload = 'auto';
+  audio.volume = 0.55;
+  sfxBuffers[key] = audio;
+}
+let sfxMuted = false;
+const lastPlayedAt = {};
+function playSfx(key, { minGapMs = 60, volume } = {}) {
+  if (sfxMuted) return;
+  const base = sfxBuffers[key];
+  if (!base) return;
+  const now = performance.now();
+  if (lastPlayedAt[key] && now - lastPlayedAt[key] < minGapMs) return; // Anti-Spam
+  lastPlayedAt[key] = now;
+  const node = base.cloneNode(); // eigene Instanz, damit überlappende Plays möglich sind
+  node.volume = volume ?? base.volume;
+  node.play().catch(() => {}); // Browser blockt Audio ggf. bis zur ersten Nutzerinteraktion
+}
+
 // ====== Globaler Zustand ======
 let ws = null;
 let myId = null;
@@ -69,6 +103,7 @@ document.getElementById('joinBtn').addEventListener('click', joinGame);
 document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') joinGame(); });
 
 function joinGame() {
+  playSfx('confirm', { minGapMs: 0 });
   const name = document.getElementById('nameInput').value.trim() || 'Held';
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('gameContainer').classList.remove('hidden');
@@ -109,17 +144,25 @@ function onMessage(evt) {
     case 'mapChange':
       currentMapId = msg.mapId;
       showPopup(`→ ${maps[currentMapId].name}`);
+      playSfx('dialogueExpression', { minGapMs: 0 });
       break;
     case 'chat':
       addChatLine(msg.name, msg.text);
+      if (msg.name === 'System' && /ist jetzt Level/.test(msg.text)) {
+        playSfx('success', { minGapMs: 0 }); // Levelup-Broadcast im Chat
+      } else if (msg.name !== 'System') {
+        playSfx('dialogueBlip');
+      }
       break;
     case 'notice':
       showPopup(msg.text);
+      playSfx(noticeSfxFor(msg.text), { minGapMs: 0 });
       break;
     case 'kill':
       let txt = `+${msg.exp} EXP  +${msg.gold}💰`;
       if (msg.drops.length) txt += `  [${msg.drops.map(d => items[d]?.name || d).join(', ')}]`;
       showPopup(txt);
+      playSfx('currency');
       break;
     case 'combatFx':
       spawnDamageNumber(msg.x, msg.y, msg.dmg);
@@ -138,6 +181,7 @@ window.addEventListener('keydown', e => {
   if (k === 'r') sendAction({ type: 'skill', key: firstSkillKey(2) });
   if (k === 'i') togglePanel('inventoryPanel');
   if (k === 'j') togglePanel('jobPanel');
+  if (k === 'k') togglePanel('shopPanel');
 });
 window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
@@ -202,9 +246,12 @@ function spawnDamageNumber(x, y, dmg) {
 }
 
 // ====== HUD ======
+let wasAlive = true;
 function updateHud() {
   const me = players.find(p => p.id === myId);
   if (!me) return;
+  if (wasAlive && !me.alive) playSfx('warning', { minGapMs: 0 }); // gerade gestorben
+  wasAlive = me.alive;
   document.getElementById('hudName').textContent = `${me.name}  Lv.${me.level}  ${jobs[me.job]?.name || ''}`;
   document.getElementById('hpBar').style.width = `${(me.hp / me.maxHp) * 100}%`;
   document.getElementById('hpText').textContent = `${me.hp}/${me.maxHp}`;
@@ -215,18 +262,37 @@ function updateHud() {
   document.getElementById('hudGold').lastChild.textContent = me.gold;
 }
 
+// Ordnet Server-Textmeldungen (type: 'notice') dem passenden SFX zu, da der
+// Server aktuell keinen eigenen Grund-Typ mitschickt, nur den Anzeigetext.
+function noticeSfxFor(text) {
+  if (/erst ab Level/.test(text)) return 'lock';
+  if (/^Du bist jetzt/.test(text)) return 'unlock';
+  if (/Nicht genug Mana|Zu wenig Gold/.test(text)) return 'failure';
+  return 'confirm'; // Heilung, Buff aktiviert, etc.
+}
+
 // ====== Panels ======
 document.querySelectorAll('.closeBtn').forEach(btn => {
-  btn.addEventListener('click', () => document.getElementById(btn.dataset.close).classList.add('hidden'));
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.close).classList.add('hidden');
+    playSfx('menuClose', { minGapMs: 0 });
+  });
 });
 document.getElementById('slotInv').addEventListener('click', () => togglePanel('inventoryPanel'));
 document.getElementById('slotJob').addEventListener('click', () => togglePanel('jobPanel'));
+document.getElementById('slotShop').addEventListener('click', () => togglePanel('shopPanel'));
+document.querySelectorAll('.skillSlot').forEach(el => {
+  el.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
+});
 
 function togglePanel(id) {
   const el = document.getElementById(id);
+  const willOpen = el.classList.contains('hidden');
   el.classList.toggle('hidden');
-  if (id === 'inventoryPanel' && !el.classList.contains('hidden')) renderInventoryPanel();
-  if (id === 'jobPanel' && !el.classList.contains('hidden')) renderJobPanel();
+  playSfx(willOpen ? 'menuOpen' : 'menuClose', { minGapMs: 0 });
+  if (willOpen && id === 'inventoryPanel') renderInventoryPanel();
+  if (willOpen && id === 'jobPanel') renderJobPanel();
+  if (willOpen && id === 'shopPanel') renderShopPanel();
 }
 
 function buildSkillBar() {
@@ -247,8 +313,11 @@ function refreshSkillLabels() {
 }
 
 function renderInventoryPanel() {
-  document.getElementById('equipWeapon').innerHTML = `Waffe<br>${equipLabel('weapon')}`;
-  document.getElementById('equipArmor').innerHTML = `Rüstung<br>${equipLabel('armor')}`;
+  const me = players.find(p => p.id === myId);
+  document.getElementById('equipWeapon').innerHTML =
+    `Waffe<br>${equipLabel('weapon')}${me && me.equipment.weapon ? '<div class="itemActions"><button data-unequip="weapon">Ausziehen</button></div>' : ''}`;
+  document.getElementById('equipArmor').innerHTML =
+    `Rüstung<br>${equipLabel('armor')}${me && me.equipment.armor ? '<div class="itemActions"><button data-unequip="armor">Ausziehen</button></div>' : ''}`;
   const grid = document.getElementById('invGrid');
   grid.innerHTML = '';
   for (const entry of myInventory) {
@@ -261,11 +330,13 @@ function renderInventoryPanel() {
     if (def.type === 'weapon' || def.type === 'armor') actions = `<button data-equip="${entry.item}">Ausrüsten</button><button data-sell="${entry.item}">Verkaufen</button>`;
     if (def.type === 'material') actions = `<button data-sell="${entry.item}">Verkaufen</button>`;
     card.innerHTML = `<div class="itemSwatch" style="background:${def.color || '#888'}"></div>${def.name} x${entry.qty}<div class="itemActions">${actions}</div>`;
+    card.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
     grid.appendChild(card);
   }
-  grid.querySelectorAll('[data-use]').forEach(b => b.onclick = () => sendAction({ type: 'useItem', item: b.dataset.use }));
-  grid.querySelectorAll('[data-equip]').forEach(b => b.onclick = () => sendAction({ type: 'equip', item: b.dataset.equip }));
-  grid.querySelectorAll('[data-sell]').forEach(b => b.onclick = () => sendAction({ type: 'sell', item: b.dataset.sell, qty: 1 }));
+  grid.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { sendAction({ type: 'useItem', item: b.dataset.use }); playSfx('confirm', { minGapMs: 0 }); });
+  grid.querySelectorAll('[data-equip]').forEach(b => b.onclick = () => { sendAction({ type: 'equip', item: b.dataset.equip }); playSfx('clickedIn', { minGapMs: 0 }); });
+  grid.querySelectorAll('[data-sell]').forEach(b => b.onclick = () => { sendAction({ type: 'sell', item: b.dataset.sell, qty: 1 }); playSfx('sell', { minGapMs: 0 }); });
+  document.querySelectorAll('[data-unequip]').forEach(b => b.onclick = () => { sendAction({ type: 'unequip', slot: b.dataset.unequip }); playSfx('clickedOut', { minGapMs: 0 }); renderInventoryPanel(); });
 }
 
 function equipLabel(slot) {
@@ -284,9 +355,33 @@ function renderJobPanel() {
     card.className = 'jobCard';
     const skillNames = Object.values(job.skills || {}).map(s => s.name).join(', ');
     card.innerHTML = `<b style="color:${job.color}">${job.name}</b><br><small>${skillNames}</small>`;
-    card.onclick = () => sendAction({ type: 'chooseJob', job: key });
+    card.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
+    card.onclick = () => sendAction({ type: 'chooseJob', job: key }); // Sound kommt über die 'notice'-Antwort (unlock/lock)
     grid.appendChild(card);
   }
+}
+
+function renderShopPanel() {
+  const me = players.find(p => p.id === myId);
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  for (const itemId of shopList) {
+    const def = items[itemId];
+    if (!def) continue;
+    const owned = me && me.job && def.jobReq && def.jobReq !== me.job;
+    const card = document.createElement('div');
+    card.className = 'shopItem';
+    card.innerHTML = `<div class="itemSwatch" style="background:${def.color || '#888'}"></div>${def.name}<br><small>${def.price}💰${owned ? ` · nur ${jobs[def.jobReq]?.name || def.jobReq}` : ''}</small><div class="itemActions"><button data-buy="${itemId}">Kaufen</button></div>`;
+    card.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
+    grid.appendChild(card);
+  }
+  grid.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
+    const def = items[b.dataset.buy];
+    const meNow = players.find(p => p.id === myId);
+    if (def && meNow && meNow.gold < def.price) { playSfx('failure', { minGapMs: 0 }); return; }
+    sendAction({ type: 'buy', item: b.dataset.buy });
+    playSfx('purchase', { minGapMs: 0 });
+  });
 }
 
 // ====== Rendering ======
