@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Maple Clone</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="loginBox">
+    <img class="loginCat" src="assets/ui/sleeping_cat.png" alt="">
+    <h1><img class="pawIcon" src="assets/ui/paw.png" alt="">Maple Clone</h1>
+    <input id="nameInput" maxlength="16" placeholder="Charaktername" autocomplete="off">
+    <button id="joinBtn">Spiel starten</button>
+  </div>
+</div>
+
+<div id="gameContainer" class="hidden">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD oben links -->
+  <div id="hud">
+    <img id="hudPortrait" src="assets/ui/portrait.png" alt="">
+    <div id="hudInfo">
+      <div id="hudName"></div>
+      <div class="barRow"><span class="barLabel">HP</span><div class="bar"><div id="hpBar" class="barFill hpFill"></div></div><span id="hpText" class="barText"></span></div>
+      <div class="barRow"><span class="barLabel">MP</span><div class="bar"><div id="mpBar" class="barFill mpFill"></div></div><span id="mpText" class="barText"></span></div>
+      <div class="barRow"><span class="barLabel">EXP</span><div class="bar"><div id="expBar" class="barFill expFill"></div></div><span id="expText" class="barText"></span></div>
+      <div id="hudGold"><img src="assets/ui/gold_coin.png" alt="">0</div>
+    </div>
+  </div>
+
+  <!-- Skillleiste unten -->
+  <div id="skillBar">
+    <div class="skillSlot" id="slotAttack"><span>Z</span>Angriff</div>
+    <div class="skillSlot" id="slot1"><span>1</span>—</div>
+    <div class="skillSlot" id="slot2"><span>2</span>—</div>
+    <div class="skillSlot" id="slotInv" data-panel="inventoryPanel"><span>I</span>Inventar</div>
+    <div class="skillSlot" id="slotJob" data-panel="jobPanel"><span>J</span>Job</div>
+  </div>
+
+  <!-- Chat -->
+  <div id="chatBox">
+    <div id="chatLog"></div>
+    <input id="chatInput" placeholder="Enter zum Chatten..." autocomplete="off">
+  </div>
+
+  <!-- Popups (Levelup, Loot, Notice) -->
+  <div id="popupLayer"></div>
+
+  <!-- Inventar-Panel -->
+  <div id="inventoryPanel" class="panel hidden">
+    <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Inventar</span> <span class="closeBtn" data-close="inventoryPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
+    <div id="equipRow">
+      <div class="equipSlot" id="equipWeapon">Waffe<br>—</div>
+      <div class="equipSlot" id="equipArmor">Rüstung<br>—</div>
+    </div>
+    <div id="invGrid"></div>
+  </div>
+
+  <!-- Job-Panel -->
+  <div id="jobPanel" class="panel hidden">
+    <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Job wählen</span> <span class="closeBtn" data-close="jobPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
+    <div id="jobGrid"></div>
+  </div>
+
+  <!-- Shop-Panel -->
+  <div id="shopPanel" class="panel hidden">
+    <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Händler</span> <span class="closeBtn" data-close="shopPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
+    <div id="shopGrid"></div>
+  </div>
+</div>
+
+<script src="client.js"></script>
+</body>
+</html>

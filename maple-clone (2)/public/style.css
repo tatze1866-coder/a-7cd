@@ -1,0 +1,199 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cat-bg: #FFD2C2;
+  --cat-bg-soft: #FFE4D8;
+  --cat-bg-dark: #F0B49E;
+  --cat-panel: #FFF3E9;
+  --cat-outline: #40393B;
+  --cat-outline-soft: #6E5D53;
+  --cat-hp: #C25744;
+  --cat-hp-dark: #9B4332;
+  --cat-mp: #78B1BA;
+  --cat-mp-dark: #6E959C;
+  --cat-exp: #E8C97E;
+  --cat-exp-dark: #C9A05B;
+  --cat-text: #4A3728;
+  --cat-track: #FFE9DE;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #111;
+  overflow: hidden;
+  user-select: none;
+}
+.hidden { display: none !important; }
+
+img { image-rendering: pixelated; }
+
+/* --- Login --- */
+#loginScreen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #ffd8c2, #b7dce6);
+}
+.loginBox {
+  background: var(--cat-panel);
+  padding: 30px 50px 40px;
+  border-radius: 20px;
+  text-align: center;
+  border: 4px solid var(--cat-outline);
+  box-shadow: 0 10px 0 var(--cat-bg-dark), 0 14px 30px rgba(0,0,0,0.35);
+}
+.loginCat {
+  width: 90px;
+  height: auto;
+  margin-bottom: 6px;
+  image-rendering: pixelated;
+}
+.loginBox h1 {
+  margin-bottom: 20px; color: var(--cat-text); font-size: 28px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.pawIcon { width: 26px; height: 26px; image-rendering: pixelated; }
+.pawIcon.small { width: 18px; height: 18px; margin-right: 6px; vertical-align: -4px; }
+.loginBox input {
+  display: block; width: 260px; padding: 10px 14px;
+  font-size: 16px; border: 3px solid var(--cat-outline); border-radius: 10px; margin-bottom: 16px;
+  background: #fff; color: var(--cat-text);
+}
+.loginBox button {
+  padding: 10px 26px; font-size: 16px; font-weight: bold;
+  background: var(--cat-bg); color: var(--cat-text);
+  border: 3px solid var(--cat-outline); border-radius: 12px; cursor: pointer;
+  box-shadow: 0 4px 0 var(--cat-bg-dark);
+}
+.loginBox button:hover { background: var(--cat-bg-soft); }
+.loginBox button:active { box-shadow: 0 1px 0 var(--cat-bg-dark); transform: translateY(3px); }
+
+/* --- Game --- */
+#gameContainer { position: fixed; inset: 0; background: #000; }
+#gameCanvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+/* --- HUD --- */
+#hud {
+  position: fixed; top: 12px; left: 12px;
+  background: var(--cat-panel);
+  border: 3px solid var(--cat-outline);
+  border-radius: 12px; padding: 8px 10px;
+  color: var(--cat-text); width: 250px; z-index: 10;
+  display: flex; gap: 8px;
+  box-shadow: 0 4px 0 var(--cat-bg-dark);
+}
+#hudPortrait {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border: 2px solid var(--cat-outline); border-radius: 8px;
+  image-rendering: pixelated;
+}
+#hudInfo { flex: 1; min-width: 0; }
+#hudName { font-weight: bold; margin-bottom: 4px; font-size: 12px; }
+.barRow { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; font-size: 10px; }
+.barLabel { width: 22px; font-weight: bold; }
+.bar {
+  flex: 1; height: 9px; background: var(--cat-track);
+  border: 2px solid var(--cat-outline); border-radius: 5px; overflow: hidden;
+}
+.barFill { height: 100%; width: 0%; transition: width 0.2s; }
+.hpFill { background: var(--cat-hp); box-shadow: inset 0 -2px 0 var(--cat-hp-dark); }
+.mpFill { background: var(--cat-mp); box-shadow: inset 0 -2px 0 var(--cat-mp-dark); }
+.expFill { background: var(--cat-exp); box-shadow: inset 0 -2px 0 var(--cat-exp-dark); }
+.barText { width: 62px; text-align: right; font-size: 9px; }
+#hudGold {
+  margin-top: 4px; font-size: 12px; font-weight: bold;
+  display: flex; align-items: center; gap: 4px;
+}
+#hudGold img { width: 14px; height: 14px; }
+
+/* --- Skillbar --- */
+#skillBar {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 10;
+}
+.skillSlot {
+  width: 56px; height: 56px;
+  background: var(--cat-bg);
+  border: 3px solid var(--cat-outline); border-radius: 10px;
+  color: var(--cat-text);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 10px; cursor: pointer;
+  box-shadow: 0 4px 0 var(--cat-bg-dark);
+}
+.skillSlot span { font-weight: bold; font-size: 13px; color: var(--cat-hp-dark); }
+.skillSlot:hover { background: var(--cat-bg-soft); }
+.skillSlot:active { box-shadow: 0 1px 0 var(--cat-bg-dark); transform: translateY(3px); }
+.skillSlot.onCooldown { opacity: 0.5; }
+
+/* --- Chat --- */
+#chatBox {
+  position: fixed; bottom: 80px; left: 12px; width: 340px; z-index: 10;
+}
+#chatLog {
+  max-height: 140px; overflow-y: auto;
+  background: rgba(255,243,233,0.9);
+  border: 3px solid var(--cat-outline);
+  border-radius: 10px; padding: 6px 10px; margin-bottom: 6px; font-size: 12px; color: var(--cat-text);
+}
+#chatLog div { margin-bottom: 2px; }
+#chatInput {
+  width: 100%; padding: 6px 10px; border-radius: 8px;
+  border: 3px solid var(--cat-outline);
+  background: rgba(255,243,233,0.95); color: var(--cat-text); font-size: 12px;
+}
+#chatInput::placeholder { color: #a08b7a; }
+
+/* --- Popups --- */
+#popupLayer {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 20; pointer-events: none;
+}
+.popupMsg {
+  background: var(--cat-panel); color: var(--cat-hp-dark);
+  border: 2px solid var(--cat-outline);
+  padding: 6px 16px;
+  border-radius: 20px; font-size: 13px; font-weight: bold;
+  animation: floatUp 2.5s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  15% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* --- Panels --- */
+.panel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 360px; max-height: 70vh; overflow-y: auto;
+  background: var(--cat-panel); border-radius: 14px; padding: 14px;
+  color: var(--cat-text); z-index: 30; border: 4px solid var(--cat-outline);
+  box-shadow: 0 6px 0 var(--cat-bg-dark), 0 10px 24px rgba(0,0,0,0.4);
+}
+.panelHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: bold; font-size: 16px; margin-bottom: 10px;
+  border-bottom: 2px solid var(--cat-bg-dark); padding-bottom: 8px;
+}
+.closeBtn { cursor: pointer; line-height: 0; }
+.closeBtn img { width: 26px; height: 26px; }
+.closeBtn:hover { filter: brightness(1.1); }
+
+#equipRow { display: flex; gap: 10px; margin-bottom: 12px; }
+.equipSlot {
+  flex: 1; background: var(--cat-bg-soft); border: 2px dashed var(--cat-outline-soft); border-radius: 10px;
+  padding: 10px; text-align: center; font-size: 12px; cursor: pointer;
+}
+#invGrid, #shopGrid, #jobGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.invItem, .shopItem, .jobCard {
+  background: var(--cat-bg-soft); border-radius: 10px; padding: 10px; font-size: 12px; cursor: pointer;
+  border: 2px solid var(--cat-outline-soft);
+}
+.invItem:hover, .shopItem:hover, .jobCard:hover { border-color: var(--cat-hp-dark); }
+.itemSwatch { width: 100%; height: 20px; border-radius: 4px; margin-bottom: 6px; border: 1px solid var(--cat-outline-soft); }
+.itemActions { display: flex; gap: 4px; margin-top: 6px; }
+.itemActions button {
+  flex: 1; font-size: 10px; padding: 4px; border-radius: 6px;
+  border: 2px solid var(--cat-outline); cursor: pointer;
+  background: var(--cat-bg); color: var(--cat-text); font-weight: bold;
+}
+.itemActions button:hover { background: var(--cat-bg-soft); }
