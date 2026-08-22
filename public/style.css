@@ -108,21 +108,28 @@ img { image-rendering: pixelated; }
 /* --- Skillbar --- */
 #skillBar {
   position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 8px; z-index: 10;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; z-index: 10;
+  max-width: 96vw;
 }
 .skillSlot {
-  width: 56px; height: 56px;
+  width: 50px; height: 50px;
   background: var(--cat-bg);
   border: 3px solid var(--cat-outline); border-radius: 10px;
   color: var(--cat-text);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-size: 10px; cursor: pointer;
+  font-size: 9px; cursor: pointer;
   box-shadow: 0 4px 0 var(--cat-bg-dark);
 }
 .skillSlot span { font-weight: bold; font-size: 13px; color: var(--cat-hp-dark); }
 .skillSlot:hover { background: var(--cat-bg-soft); }
 .skillSlot:active { box-shadow: 0 1px 0 var(--cat-bg-dark); transform: translateY(3px); }
 .skillSlot.onCooldown { opacity: 0.5; }
+.slotIcon {
+  width: 20px; height: 20px; margin: 1px 0;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  image-rendering: pixelated;
+}
+.slotIcon.hasIcon { filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25)); }
 
 /* --- Chat --- */
 #chatBox {
@@ -189,7 +196,8 @@ img { image-rendering: pixelated; }
   border: 2px solid var(--cat-outline-soft);
 }
 .invItem:hover, .shopItem:hover, .jobCard:hover { border-color: var(--cat-hp-dark); }
-.itemSwatch { width: 100%; height: 20px; border-radius: 4px; margin-bottom: 6px; border: 1px solid var(--cat-outline-soft); }
+.itemSwatch { width: 100%; height: 20px; border-radius: 4px; margin-bottom: 6px; border: 1px solid var(--cat-outline-soft); display: flex; align-items: center; justify-content: center; }
+.itemSwatch img { width: 16px; height: 16px; image-rendering: pixelated; }
 .itemActions { display: flex; gap: 4px; margin-top: 6px; }
 .itemActions button {
   flex: 1; font-size: 10px; padding: 4px; border-radius: 6px;
@@ -197,3 +205,44 @@ img { image-rendering: pixelated; }
   background: var(--cat-bg); color: var(--cat-text); font-weight: bold;
 }
 .itemActions button:hover { background: var(--cat-bg-soft); }
+.itemActions button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* --- Quest-Panel --- */
+.emptyHint { font-size: 12px; color: var(--cat-outline-soft); text-align: center; padding: 20px 6px; }
+
+/* --- Skillbaum-Panel --- */
+#skillPointsInfo { font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+#skillTreeGrid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.skillNode {
+  background: var(--cat-bg-soft); border: 2px solid var(--cat-outline-soft); border-radius: 10px;
+  padding: 10px; font-size: 12px;
+}
+.skillNodeHead { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.skillNodeIcon { width: 24px; height: 24px; image-rendering: pixelated; flex-shrink: 0; }
+
+/* --- Charakter-Panel --- */
+.panel.wide { width: 420px; }
+#charLayout { display: flex; align-items: stretch; gap: 8px; margin-bottom: 14px; }
+.equipCol { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.equipSlot.small { padding: 8px 6px; font-size: 10px; }
+#charPreview {
+  width: 110px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cat-bg-soft); border: 2px dashed var(--cat-outline-soft); border-radius: 10px;
+}
+#charPreview img { width: 82px; height: 82px; object-fit: contain; border-radius: 8px; }
+#charStats { border-top: 2px solid var(--cat-bg-dark); padding-top: 10px; }
+#statPointsInfo { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+.statRow {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  background: var(--cat-bg-soft); border: 2px solid var(--cat-outline-soft); border-radius: 8px;
+  padding: 6px 10px; font-size: 13px;
+}
+.statLabel { font-weight: bold; width: 40px; }
+.statVal { flex: 1; text-align: right; font-weight: bold; }
+.statPlus {
+  width: 26px; height: 26px; border-radius: 6px; border: 2px solid var(--cat-outline); cursor: pointer;
+  background: var(--cat-bg); color: var(--cat-text); font-weight: bold;
+}
+.statPlus:hover { background: var(--cat-bg-soft); }
+.statPlus:disabled { opacity: 0.4; cursor: not-allowed; }

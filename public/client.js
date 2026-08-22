@@ -32,6 +32,92 @@ function playSfx(key, { minGapMs = 60, volume } = {}) {
   node.play().catch(() => {}); // Browser blockt Audio ggf. bis zur ersten Nutzerinteraktion
 }
 
+// ====== Hintergrundmusik pro Map (Loop) ======
+const MUSIC_TRACKS = {
+  henesys: 'assets/music/henesys_ambient.mp3'
+  // weitere Maps: kerning/sleepywood etc. hier ergänzen, sobald Tracks da sind
+};
+const MUSIC_VOLUME = 0.35;
+const MUSIC_FADE_MS = 800;
+let currentMusic = null;   // { audio, mapId }
+let musicFadeTimer = null;
+
+function updateMusicForMap(mapId) {
+  const track = MUSIC_TRACKS[mapId];
+  if (currentMusic && currentMusic.mapId === mapId) return; // schon richtig
+  stopMusic();
+  if (!track) return;
+  const audio = new Audio(track);
+  audio.loop = true;
+  audio.volume = 0;
+  audio.play().catch(() => {}); // ggf. blockiert bis zur ersten Nutzerinteraktion
+  currentMusic = { audio, mapId };
+  fadeMusic(audio, 0, MUSIC_VOLUME);
+}
+
+function stopMusic() {
+  if (!currentMusic) return;
+  const { audio } = currentMusic;
+  currentMusic = null;
+  fadeMusic(audio, audio.volume, 0, () => { audio.pause(); });
+}
+
+function fadeMusic(audio, from, to, onDone) {
+  clearInterval(musicFadeTimer);
+  const steps = 16;
+  let i = 0;
+  audio.volume = from;
+  musicFadeTimer = setInterval(() => {
+    i++;
+    audio.volume = from + (to - from) * (i / steps);
+    if (i >= steps) {
+      clearInterval(musicFadeTimer);
+      audio.volume = to;
+      if (onDone) onDone();
+    }
+  }, MUSIC_FADE_MS / steps);
+}
+
+// ====== Skill-Effekte (Pixel-FX-Sheets, 192x64 = 6 Spalten x 2 Reihen à 32px) ======
+const FX_KEYS = [
+  'fx_warrior_slash', 'fx_warrior_rage', 'fx_warrior_cleave', 'fx_warrior_charge', 'fx_warrior_meteor',
+  'fx_bow_doubleshot', 'fx_bow_focus', 'fx_bow_snipe', 'fx_bow_rain', 'fx_bow_grasp',
+  'fx_thief_lucky7', 'fx_thief_haste', 'fx_thief_backstab', 'fx_thief_shadowveil', 'fx_thief_assassinate',
+  'fx_priest_bolt', 'fx_priest_heal', 'fx_priest_bless', 'fx_priest_comet', 'fx_priest_sanctuary'
+];
+const FX_COLS = 6, FX_ROWS = 2, FX_FRAME_SRC = 32, FX_FRAME_MS = 45, FX_RENDER_SIZE = 64;
+const fxImages = {};
+for (const key of FX_KEYS) {
+  const img = new Image();
+  img.src = `assets/fx/${key}.png`;
+  fxImages[key] = img;
+}
+let activeEffects = []; // { fx, x, y, born }
+
+function spawnSkillFx(fx, x, y) {
+  if (!fxImages[fx]) return;
+  activeEffects.push({ fx, x, y, born: performance.now() });
+}
+
+function drawEffects() {
+  const now = performance.now();
+  const totalFrames = FX_COLS * FX_ROWS;
+  activeEffects = activeEffects.filter(e => now - e.born < totalFrames * FX_FRAME_MS);
+  for (const e of activeEffects) {
+    const img = fxImages[e.fx];
+    if (!img || !img.complete) continue;
+    const elapsed = now - e.born;
+    const frame = Math.min(totalFrames - 1, Math.floor(elapsed / FX_FRAME_MS));
+    const col = frame % FX_COLS;
+    const row = Math.floor(frame / FX_COLS);
+    ctx.drawImage(
+      img,
+      col * FX_FRAME_SRC, row * FX_FRAME_SRC, FX_FRAME_SRC, FX_FRAME_SRC,
+      e.x - FX_RENDER_SIZE / 2, e.y - FX_RENDER_SIZE / 2, FX_RENDER_SIZE, FX_RENDER_SIZE
+    );
+  }
+}
+
 // ====== Globaler Zustand ======
 let ws = null;
 let myId = null;
@@ -130,6 +216,7 @@ function onMessage(evt) {
       shopList = msg.shop;
       currentMapId = msg.mapId;
       buildSkillBar();
+      updateMusicForMap(currentMapId);
       break;
     case 'state':
       players = msg.players;
@@ -145,6 +232,7 @@ function onMessage(evt) {
       currentMapId = msg.mapId;
       showPopup(`→ ${maps[currentMapId].name}`);
       playSfx('dialogueExpression', { minGapMs: 0 });
+      updateMusicForMap(currentMapId);
       break;
     case 'chat':
       addChatLine(msg.name, msg.text);
@@ -165,7 +253,10 @@ function onMessage(evt) {
       playSfx('currency');
       break;
     case 'combatFx':
-      spawnDamageNumber(msg.x, msg.y, msg.dmg);
+      spawnDamageNumber(msg.x, msg.y, msg.dmg, msg.crit);
+      break;
+    case 'skillFx':
+      spawnSkillFx(msg.fx, msg.x, msg.y);
       break;
   }
 }
@@ -179,9 +270,14 @@ window.addEventListener('keydown', e => {
   if (k === 'w') sendAction({ type: 'skill', key: firstSkillKey(0) });
   if (k === 'e') sendAction({ type: 'skill', key: firstSkillKey(1) });
   if (k === 'r') sendAction({ type: 'skill', key: firstSkillKey(2) });
+  if (k === 't') sendAction({ type: 'skill', key: firstSkillKey(3) });
+  if (k === 'y') sendAction({ type: 'skill', key: firstSkillKey(4) });
   if (k === 'i') togglePanel('inventoryPanel');
-  if (k === 'j') togglePanel('jobPanel');
-  if (k === 'k') togglePanel('shopPanel');
+  if (k === 'j') togglePanel('questPanel');
+  if (k === 'k') togglePanel('skilltreePanel');
+  if (k === 'c') togglePanel('characterPanel');
+  if (k === 'l') togglePanel('jobPanel');
+  if (k === 'h') togglePanel('shopPanel');
 });
 window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
@@ -241,8 +337,8 @@ function showPopup(text) {
 }
 
 let dmgNumbers = [];
-function spawnDamageNumber(x, y, dmg) {
-  dmgNumbers.push({ x, y, dmg, born: performance.now() });
+function spawnDamageNumber(x, y, dmg, crit) {
+  dmgNumbers.push({ x, y, dmg, crit: !!crit, born: performance.now() });
 }
 
 // ====== HUD ======
@@ -281,6 +377,9 @@ document.querySelectorAll('.closeBtn').forEach(btn => {
 document.getElementById('slotInv').addEventListener('click', () => togglePanel('inventoryPanel'));
 document.getElementById('slotJob').addEventListener('click', () => togglePanel('jobPanel'));
 document.getElementById('slotShop').addEventListener('click', () => togglePanel('shopPanel'));
+document.getElementById('slotQuest').addEventListener('click', () => togglePanel('questPanel'));
+document.getElementById('slotSkilltree').addEventListener('click', () => togglePanel('skilltreePanel'));
+document.getElementById('slotChar').addEventListener('click', () => togglePanel('characterPanel'));
 document.querySelectorAll('.skillSlot').forEach(el => {
   el.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
 });
@@ -293,6 +392,8 @@ function togglePanel(id) {
   if (willOpen && id === 'inventoryPanel') renderInventoryPanel();
   if (willOpen && id === 'jobPanel') renderJobPanel();
   if (willOpen && id === 'shopPanel') renderShopPanel();
+  if (willOpen && id === 'skilltreePanel') renderSkilltreePanel();
+  if (willOpen && id === 'characterPanel') renderCharacterPanel();
 }
 
 function buildSkillBar() {
@@ -307,17 +408,32 @@ function refreshSkillLabels() {
   const slot1 = document.getElementById('slot1');
   const slot2 = document.getElementById('slot2');
   const slot3 = document.getElementById('slot3');
-  slot1.lastChild.textContent = jobKeys[0] ? job.skills[jobKeys[0]].name : '—';
-  slot2.lastChild.textContent = jobKeys[1] ? job.skills[jobKeys[1]].name : '—';
-  slot3.lastChild.textContent = jobKeys[2] ? job.skills[jobKeys[2]].name : '—';
+  const slot4 = document.getElementById('slot4');
+  const slot5 = document.getElementById('slot5');
+  const slots = [slot1, slot2, slot3, slot4, slot5];
+  slots.forEach((slotEl, i) => {
+    const skillDef = jobKeys[i] ? job.skills[jobKeys[i]] : null;
+    slotEl.lastChild.textContent = skillDef ? skillDef.name : '—';
+    setSlotIcon(slotEl, skillDef && skillDef.icon);
+  });
+}
+
+function setSlotIcon(slotEl, iconKey) {
+  const iconDiv = slotEl.querySelector('.slotIcon');
+  if (!iconDiv) return;
+  if (iconKey) {
+    iconDiv.style.backgroundImage = `url(assets/skillicons/${iconKey}.png)`;
+    iconDiv.classList.add('hasIcon');
+  } else {
+    iconDiv.style.backgroundImage = '';
+    iconDiv.classList.remove('hasIcon');
+  }
 }
 
 function renderInventoryPanel() {
   const me = players.find(p => p.id === myId);
   document.getElementById('equipWeapon').innerHTML =
     `Waffe<br>${equipLabel('weapon')}${me && me.equipment.weapon ? '<div class="itemActions"><button data-unequip="weapon">Ausziehen</button></div>' : ''}`;
-  document.getElementById('equipArmor').innerHTML =
-    `Rüstung<br>${equipLabel('armor')}${me && me.equipment.armor ? '<div class="itemActions"><button data-unequip="armor">Ausziehen</button></div>' : ''}`;
   const grid = document.getElementById('invGrid');
   grid.innerHTML = '';
   for (const entry of myInventory) {
@@ -329,7 +445,7 @@ function renderInventoryPanel() {
     if (def.type === 'consumable') actions = `<button data-use="${entry.item}">Nutzen</button>`;
     if (def.type === 'weapon' || def.type === 'armor') actions = `<button data-equip="${entry.item}">Ausrüsten</button><button data-sell="${entry.item}">Verkaufen</button>`;
     if (def.type === 'material') actions = `<button data-sell="${entry.item}">Verkaufen</button>`;
-    card.innerHTML = `<div class="itemSwatch" style="background:${def.color || '#888'}"></div>${def.name} x${entry.qty}<div class="itemActions">${actions}</div>`;
+    card.innerHTML = `<div class="itemSwatch"${def.icon ? '' : ` style="background:${def.color || '#888'}"`}>${def.icon ? `<img src="assets/skillicons/${def.icon}.png" alt="">` : ''}</div>${def.name} x${entry.qty}<div class="itemActions">${actions}</div>`;
     card.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
     grid.appendChild(card);
   }
@@ -371,7 +487,7 @@ function renderShopPanel() {
     const owned = me && me.job && def.jobReq && def.jobReq !== me.job;
     const card = document.createElement('div');
     card.className = 'shopItem';
-    card.innerHTML = `<div class="itemSwatch" style="background:${def.color || '#888'}"></div>${def.name}<br><small>${def.price}💰${owned ? ` · nur ${jobs[def.jobReq]?.name || def.jobReq}` : ''}</small><div class="itemActions"><button data-buy="${itemId}">Kaufen</button></div>`;
+    card.innerHTML = `<div class="itemSwatch"${def.icon ? '' : ` style="background:${def.color || '#888'}"`}>${def.icon ? `<img src="assets/skillicons/${def.icon}.png" alt="">` : ''}</div>${def.name}<br><small>${def.price}💰${owned ? ` · nur ${jobs[def.jobReq]?.name || def.jobReq}` : ''}</small><div class="itemActions"><button data-buy="${itemId}">Kaufen</button></div>`;
     card.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
     grid.appendChild(card);
   }
@@ -381,6 +497,83 @@ function renderShopPanel() {
     if (def && meNow && meNow.gold < def.price) { playSfx('failure', { minGapMs: 0 }); return; }
     sendAction({ type: 'buy', item: b.dataset.buy });
     playSfx('purchase', { minGapMs: 0 });
+  });
+}
+
+// ====== Skillbaum ======
+function renderSkilltreePanel() {
+  const me = players.find(p => p.id === myId);
+  const info = document.getElementById('skillPointsInfo');
+  const grid = document.getElementById('skillTreeGrid');
+  grid.innerHTML = '';
+  if (!me || !me.job || me.job === 'beginner') {
+    info.textContent = 'Wähle zuerst einen Job (ab Level 3), um Skills zu erlernen.';
+    return;
+  }
+  const job = jobs[me.job];
+  info.textContent = `Skillpunkte: ${me.skillPoints || 0}`;
+  const skillLevels = me.skillLevels || {};
+  for (const key of Object.keys(job.skills || {})) {
+    const skill = job.skills[key];
+    const lvl = skillLevels[key] || 0;
+    const card = document.createElement('div');
+    card.className = 'skillNode';
+    const iconHtml = skill.icon ? `<img class="skillNodeIcon" src="assets/skillicons/${skill.icon}.png" alt="">` : '';
+    card.innerHTML = `<div class="skillNodeHead">${iconHtml}<b>${skill.name}</b></div><small>Stufe ${lvl}/5 · +${lvl * 10}% Effekt</small>
+      <div class="itemActions"><button data-skillup="${key}" ${(me.skillPoints || 0) > 0 && lvl < 5 ? '' : 'disabled'}>Punkt investieren</button></div>`;
+    card.addEventListener('mouseenter', () => playSfx('highlight', { minGapMs: 150, volume: 0.3 }));
+    grid.appendChild(card);
+  }
+  grid.querySelectorAll('[data-skillup]').forEach(b => b.onclick = () => {
+    sendAction({ type: 'allocateSkill', key: b.dataset.skillup });
+    playSfx('confirm', { minGapMs: 0 });
+    setTimeout(renderSkilltreePanel, 80); // kurz warten bis der Server-State zurückkommt
+  });
+}
+
+// ====== Charakter-Panel (Ausrüstung + Stats) ======
+const EQUIP_SLOT_LABELS = {
+  helmet: 'Hut', chest: 'Brustpanzer', gloves: 'Handschuhe', cape: 'Umhang',
+  pants: 'Hose', shoes: 'Schuhe', ring1: 'Ring', ring2: 'Ring'
+};
+const STAT_LABELS = { str: 'STR', dex: 'DEX', int: 'INT', luk: 'LUK' };
+
+function renderCharacterPanel() {
+  const me = players.find(p => p.id === myId);
+  if (!me) return;
+
+  document.querySelectorAll('#characterPanel .equipSlot').forEach(el => {
+    const slot = el.dataset.slot;
+    const label = EQUIP_SLOT_LABELS[slot];
+    const itemId = me.equipment[slot];
+    const itemName = itemId && items[itemId] ? items[itemId].name : '—';
+    el.innerHTML = `${label}<br>${itemName}${itemId ? '<div class="itemActions"><button data-unequipslot="' + slot + '">Ausziehen</button></div>' : ''}`;
+  });
+  document.querySelectorAll('#characterPanel [data-unequipslot]').forEach(b => b.onclick = (ev) => {
+    ev.stopPropagation();
+    sendAction({ type: 'unequip', slot: b.dataset.unequipslot });
+    playSfx('clickedOut', { minGapMs: 0 });
+  });
+
+  const statsInfo = document.getElementById('statPointsInfo');
+  statsInfo.textContent = `Freie Statpunkte: ${me.statPoints || 0}`;
+
+  const stats = me.stats || { str: 0, dex: 0, int: 0, luk: 0 };
+  for (const stat of Object.keys(STAT_LABELS)) {
+    const row = document.querySelector(`#charStats .statRow[data-stat="${stat}"]`);
+    if (!row) continue;
+    row.querySelector('.statVal').textContent = stats[stat] ?? 0;
+  }
+  const hpRow = document.querySelector('#charStats .statRow[data-stat="hp"]');
+  if (hpRow) hpRow.querySelector('.statVal').textContent = `${me.maxHp}`;
+
+  document.querySelectorAll('#charStats .statPlus').forEach(b => {
+    b.disabled = !(me.statPoints > 0);
+    b.onclick = () => {
+      sendAction({ type: 'allocateStat', stat: b.dataset.stat });
+      playSfx('confirm', { minGapMs: 0 });
+      setTimeout(renderCharacterPanel, 80);
+    };
   });
 }
 
@@ -433,15 +626,25 @@ function render() {
   // Spieler (nur der aktuellen Map)
   for (const p of players) drawPlayer(p, p.id === myId);
 
+  // Skill-Effekte (über Mobs/Spielern)
+  drawEffects();
+
   // Damage-Zahlen
   const now = performance.now();
   dmgNumbers = dmgNumbers.filter(d => now - d.born < 800);
   for (const d of dmgNumbers) {
     const t = (now - d.born) / 800;
-    ctx.fillStyle = `rgba(255,80,80,${1 - t})`;
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`-${d.dmg}`, d.x, d.y - 50 - t * 30);
+    if (d.crit) {
+      ctx.fillStyle = `rgba(255,210,60,${1 - t})`;
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`-${d.dmg}!`, d.x, d.y - 55 - t * 34);
+    } else {
+      ctx.fillStyle = `rgba(255,80,80,${1 - t})`;
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`-${d.dmg}`, d.x, d.y - 50 - t * 30);
+    }
   }
 
   ctx.restore();

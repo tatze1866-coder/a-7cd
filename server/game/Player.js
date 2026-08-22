@@ -7,6 +7,9 @@ function expForLevel(level) {
   return Math.floor(30 * Math.pow(level, 1.6));
 }
 
+const EQUIP_SLOTS = ['weapon', 'helmet', 'chest', 'gloves', 'cape', 'pants', 'shoes', 'ring1', 'ring2'];
+const STAT_KEYS = ['str', 'dex', 'int', 'luk'];
+
 class Player {
   constructor(ws, name) {
     this.id = nextPlayerId++;
@@ -22,9 +25,17 @@ class Player {
     this.maxMp = 50;
     this.mp = 50;
 
+    // --- Stats & Punkte (5 Punkte pro Level-up, frei verteilbar) ---
+    this.stats = { str: 4, dex: 4, int: 4, luk: 4 };
+    this.statPoints = 0;
+
+    // --- Skillbaum: 1 Skillpunkt pro Level-up (sobald ein Job gewählt ist) ---
+    this.skillPoints = 0;
+    this.skillLevels = {}; // skillKey -> 0..5, jede Stufe = +10% Effekt
+
     this.gold = 100;
     this.inventory = []; // { item: id, qty }
-    this.equipment = { weapon: null, armor: null };
+    this.equipment = { weapon: null, helmet: null, chest: null, gloves: null, cape: null, pants: null, shoes: null, ring1: null, ring2: null };
 
     this.mapId = 'henesys';
     this.x = 100;
@@ -47,18 +58,42 @@ class Player {
     return JOBS[this.job];
   }
 
+  // Summe eines Stat-Bonus (z.B. aus Ringen) über alle ausgerüsteten Items
+  equippedStatBonus(stat) {
+    let total = 0;
+    for (const slot of EQUIP_SLOTS) {
+      const id = this.equipment[slot];
+      const def = id && ITEMS[id];
+      if (def && def.statBonus && def.statBonus[stat]) total += def.statBonus[stat];
+    }
+    return total;
+  }
+
+  // Skalierung eines Skills über die aktuelle Skillbaum-Stufe (+10% pro Stufe)
+  skillScale(key) {
+    const lvl = this.skillLevels[key] || 0;
+    return 1 + lvl * 0.1;
+  }
+
   totalDamage() {
     const base = this.jobData().baseDamage + Math.floor(this.level * 1.5);
     let weaponBonus = 0;
     if (this.equipment.weapon && ITEMS[this.equipment.weapon]) {
       weaponBonus = ITEMS[this.equipment.weapon].damageBonus || 0;
     }
+    const primary = this.jobData().primaryStat;
+    const statBonus = primary ? Math.floor((this.stats[primary] + this.equippedStatBonus(primary)) * 0.8) : 0;
     let mult = 1;
     for (const key in this.buffs) {
       const b = this.buffs[key];
       if (b.until > Date.now() && b.damageMult) mult *= b.damageMult;
     }
-    return Math.floor((base + weaponBonus) * mult);
+    return Math.floor((base + weaponBonus + statBonus) * mult);
+  }
+
+  // Krit-Chance aus LUK (Basiswert + Ring-Boni), gedeckelt bei 35%
+  critChance() {
+    return Math.min(0.35, (this.stats.luk + this.equippedStatBonus('luk')) * 0.01);
   }
 
   moveSpeedMult() {
@@ -72,8 +107,10 @@ class Player {
 
   defense() {
     let def = Math.floor(this.level * 0.8);
-    if (this.equipment.armor && ITEMS[this.equipment.armor]) {
-      def += ITEMS[this.equipment.armor].defBonus || 0;
+    for (const slot of EQUIP_SLOTS) {
+      if (slot === 'weapon') continue;
+      const id = this.equipment[slot];
+      if (id && ITEMS[id]) def += ITEMS[id].defBonus || 0;
     }
     return def;
   }
@@ -104,9 +141,40 @@ class Player {
       this.maxMp += 6;
       this.hp = this.maxHp;
       this.mp = this.maxMp;
+      this.statPoints += 5;
+      if (this.job !== 'beginner') this.skillPoints += 1;
       events.push({ type: 'levelup', level: this.level });
     }
     return events;
+  }
+
+  // Ein Statpunkt investieren. stat: 'str'|'dex'|'int'|'luk'|'hp'
+  allocateStat(stat) {
+    if (this.statPoints <= 0) return false;
+    if (stat === 'hp') {
+      this.statPoints -= 1;
+      this.maxHp += 10;
+      this.hp += 10;
+      return true;
+    }
+    if (STAT_KEYS.includes(stat)) {
+      this.statPoints -= 1;
+      this.stats[stat] += 1;
+      return true;
+    }
+    return false;
+  }
+
+  // Einen Skillpunkt in einen Skill des aktuellen Jobs investieren (max Stufe 5)
+  allocateSkill(key) {
+    const job = this.jobData();
+    if (!job.skills || !job.skills[key]) return false;
+    if (this.skillPoints <= 0) return false;
+    const cur = this.skillLevels[key] || 0;
+    if (cur >= 5) return false;
+    this.skillPoints -= 1;
+    this.skillLevels[key] = cur + 1;
+    return true;
   }
 
   takeDamage(dmg) {
@@ -150,7 +218,11 @@ class Player {
       onGround: this.onGround,
       alive: this.alive,
       attackFlash: Date.now() < this.attackFlashUntil,
-      equipment: this.equipment
+      equipment: this.equipment,
+      stats: this.stats,
+      statPoints: this.statPoints,
+      skillPoints: this.skillPoints,
+      skillLevels: this.skillLevels
     };
   }
 
@@ -162,4 +234,4 @@ class Player {
   }
 }
 
-module.exports = { Player, expForLevel };
+module.exports = { Player, expForLevel, EQUIP_SLOTS };

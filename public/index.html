@@ -33,13 +33,18 @@
 
   <!-- Skillleiste unten -->
   <div id="skillBar">
-    <div class="skillSlot" id="slotAttack"><span>Q</span>Angriff</div>
-    <div class="skillSlot" id="slot1"><span>W</span>—</div>
-    <div class="skillSlot" id="slot2"><span>E</span>—</div>
-    <div class="skillSlot" id="slot3"><span>R</span>—</div>
+    <div class="skillSlot" id="slotAttack"><span>Q</span><div class="slotIcon"></div>Angriff</div>
+    <div class="skillSlot" id="slot1"><span>W</span><div class="slotIcon"></div>—</div>
+    <div class="skillSlot" id="slot2"><span>E</span><div class="slotIcon"></div>—</div>
+    <div class="skillSlot" id="slot3"><span>R</span><div class="slotIcon"></div>—</div>
+    <div class="skillSlot" id="slot4"><span>T</span><div class="slotIcon"></div>—</div>
+    <div class="skillSlot" id="slot5"><span>Y</span><div class="slotIcon"></div>—</div>
     <div class="skillSlot" id="slotInv" data-panel="inventoryPanel"><span>I</span>Inventar</div>
-    <div class="skillSlot" id="slotJob" data-panel="jobPanel"><span>J</span>Job</div>
-    <div class="skillSlot" id="slotShop" data-panel="shopPanel"><span>K</span>Händler</div>
+    <div class="skillSlot" id="slotQuest" data-panel="questPanel"><span>J</span>Quests</div>
+    <div class="skillSlot" id="slotSkilltree" data-panel="skilltreePanel"><span>K</span>Skills</div>
+    <div class="skillSlot" id="slotChar" data-panel="characterPanel"><span>C</span>Char</div>
+    <div class="skillSlot" id="slotJob" data-panel="jobPanel"><span>L</span>Job</div>
+    <div class="skillSlot" id="slotShop" data-panel="shopPanel"><span>H</span>Händler</div>
   </div>
 
   <!-- Chat -->
@@ -56,7 +61,6 @@
     <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Inventar</span> <span class="closeBtn" data-close="inventoryPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
     <div id="equipRow">
       <div class="equipSlot" id="equipWeapon">Waffe<br>—</div>
-      <div class="equipSlot" id="equipArmor">Rüstung<br>—</div>
     </div>
     <div id="invGrid"></div>
   </div>
@@ -71,6 +75,47 @@
   <div id="shopPanel" class="panel hidden">
     <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Händler</span> <span class="closeBtn" data-close="shopPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
     <div id="shopGrid"></div>
+  </div>
+
+  <!-- Quest-Panel -->
+  <div id="questPanel" class="panel hidden">
+    <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Quests</span> <span class="closeBtn" data-close="questPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
+    <div id="questList"><p class="emptyHint">Noch keine Quests verfügbar. Schau später nochmal vorbei!</p></div>
+  </div>
+
+  <!-- Skillbaum-Panel -->
+  <div id="skilltreePanel" class="panel hidden">
+    <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Skillbaum</span> <span class="closeBtn" data-close="skilltreePanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
+    <div id="skillPointsInfo"></div>
+    <div id="skillTreeGrid"></div>
+  </div>
+
+  <!-- Charakter-Panel -->
+  <div id="characterPanel" class="panel wide hidden">
+    <div class="panelHeader"><span><img class="pawIcon small" src="assets/ui/paw.png" alt="">Charakter</span> <span class="closeBtn" data-close="characterPanel"><img src="assets/ui/btn_x.png" alt="✕"></span></div>
+    <div id="charLayout">
+      <div class="equipCol" id="charEquipLeft">
+        <div class="equipSlot small" data-slot="helmet">Hut<br>—</div>
+        <div class="equipSlot small" data-slot="chest">Brustpanzer<br>—</div>
+        <div class="equipSlot small" data-slot="gloves">Handschuhe<br>—</div>
+        <div class="equipSlot small" data-slot="cape">Umhang<br>—</div>
+      </div>
+      <div id="charPreview"><img id="charPreviewImg" src="assets/player-portrait.png" alt="Charakter"></div>
+      <div class="equipCol" id="charEquipRight">
+        <div class="equipSlot small" data-slot="pants">Hose<br>—</div>
+        <div class="equipSlot small" data-slot="shoes">Schuhe<br>—</div>
+        <div class="equipSlot small" data-slot="ring1">Ring<br>—</div>
+        <div class="equipSlot small" data-slot="ring2">Ring<br>—</div>
+      </div>
+    </div>
+    <div id="charStats">
+      <div id="statPointsInfo"></div>
+      <div class="statRow" data-stat="str"><span class="statLabel">STR</span><span class="statVal">0</span><button class="statPlus" data-stat="str">+</button></div>
+      <div class="statRow" data-stat="dex"><span class="statLabel">DEX</span><span class="statVal">0</span><button class="statPlus" data-stat="dex">+</button></div>
+      <div class="statRow" data-stat="int"><span class="statLabel">INT</span><span class="statVal">0</span><button class="statPlus" data-stat="int">+</button></div>
+      <div class="statRow" data-stat="luk"><span class="statLabel">LUK</span><span class="statVal">0</span><button class="statPlus" data-stat="luk">+</button></div>
+      <div class="statRow" data-stat="hp"><span class="statLabel">HP</span><span class="statVal">0</span><button class="statPlus" data-stat="hp">+</button></div>
+    </div>
   </div>
 </div>
 

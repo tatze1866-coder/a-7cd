@@ -17,18 +17,22 @@ Mehrere Browser-Tabs/Geräte im selben Netzwerk = Multiplayer (Server-IP statt l
 
 - **Pfeiltasten / A,D** – Bewegen, **Pfeil hoch / Leertaste** – Springen
 - **Q** – Normalangriff
-- **W / E / R** – Skill 1 / 2 / 3 (abhängig vom Job)
+- **W / E / R / T / Y** – Skill 1–5 (abhängig vom Job)
 - **I** – Inventar
-- **J** – Job wählen (ab Level 3)
-- **K** – Händler (Shop)
+- **J** – Quests (noch keine vorhanden)
+- **K** – Skillbaum (Skillpunkte pro Level-up investieren, +10% Effekt/Stufe)
+- **C** – Charakter (Ausrüstung: Hut, Brustpanzer, Handschuhe, Umhang, Hose, Schuhe, 2 Ringe + Stats: STR/DEX/INT/LUK/HP, 5 Punkte pro Level-up)
+- **L** – Job wählen (ab Level 3)
+- **H** – Händler (Shop)
 - **Enter** – Chat öffnen/senden
 
 ## Inhalt (aktueller Stand)
 
 - 3 Maps mit Portalen: Henesys Field → Kerning Forest → Sleepywood Dungeon
-- 4 Jobs (ab Level 3 wählbar): Warrior, Bowmaster, Thief, Priest – je 3 Skills
+- 4 Jobs (ab Level 3 wählbar): Warrior, Bowmaster, Thief, Priest – je 5 Skills mit eigenen Pixel-FX beim Cast
 - 6 Mob-Typen mit einfacher KI (Wandern / Aggro-Chase), Respawn-Timer
-- Inventar, Equipment (Waffe/Rüstung), Loot-Tabellen pro Mob
+- Inventar, Equipment (Waffe + 6 Rüstungsslots + 2 Ringe), Loot-Tabellen pro Mob
+- Charakter-Panel mit STR/DEX/INT/LUK/HP-Stats (5 Punkte pro Level-up) und Skillbaum (1 Skillpunkt pro Level-up, +10% Skilleffekt je Stufe, max. 5)
 - Händler-Panel (Kaufen/Verkaufen) mit dem Shop-Sortiment pro Job
 - Leveling mit EXP-Kurve, HP/MP-Wachstum
 - Server-autoritative Physik (Gravity, Plattform-Kollision, one-way Plattformen)
@@ -55,6 +59,7 @@ public/
 ## Credits
 
 UI-Soundeffekte: "Cute & Cozy UI Audio" von Case Portman (caseportmanaudio.com), Free-Sample-Pack, Lizenz erfordert Namensnennung – siehe `public/assets/sfx/`.
+Skill-FX: "Super Package Retro Pixel Effects 32x32 pack 2" – siehe `public/assets/fx/`.
 
 ## Nächste Schritte (Ideen)
 

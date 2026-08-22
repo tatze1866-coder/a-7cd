@@ -114,11 +114,19 @@ wss.on('connection', (ws) => {
         break;
 
       case 'equip':
-        handleEquip(player, msg.item);
+        handleEquip(player, msg.item, msg.slot);
         break;
 
       case 'unequip':
         handleUnequip(player, msg.slot);
+        break;
+
+      case 'allocateStat':
+        player.allocateStat(msg.stat);
+        break;
+
+      case 'allocateSkill':
+        player.allocateSkill(msg.key);
         break;
 
       case 'buy':
@@ -182,8 +190,11 @@ function nearestMobInRange(player, range) {
 }
 
 function dealDamageToMob(player, mob, dmg) {
-  const died = mob.takeDamage(dmg);
-  broadcastToMap(player.mapId, { type: 'combatFx', mobId: mob.id, dmg, x: mob.x, y: mob.y });
+  // Krit-Chance aus LUK: Treffer werden mit x1.5 verstärkt
+  const isCrit = Math.random() < player.critChance();
+  const finalDmg = isCrit ? Math.floor(dmg * 1.5) : dmg;
+  const died = mob.takeDamage(finalDmg);
+  broadcastToMap(player.mapId, { type: 'combatFx', mobId: mob.id, dmg: finalDmg, crit: isCrit, x: mob.x, y: mob.y });
   if (died) {
     const def = mob.def;
     const events = player.gainExp(def.expReward);
@@ -236,15 +247,28 @@ function handleSkill(player, key) {
   player.skillCooldowns[key] = now + skill.cooldown;
   player.attackFlashUntil = now + ATTACK_ANIM_MS;
 
+  // Skillbaum-Stufe (+10% Effekt pro investiertem Skillpunkt, max 5 Stufen = +50%)
+  const scale = player.skillScale(key);
+
   if (skill.healAmount) {
-    player.hp = Math.min(player.maxHp, player.hp + skill.healAmount);
-    send(player.ws, { type: 'notice', text: `+${skill.healAmount} HP` });
+    const heal = Math.floor(skill.healAmount * scale);
+    player.hp = Math.min(player.maxHp, player.hp + heal);
+    send(player.ws, { type: 'notice', text: `+${heal} HP` });
+    if (skill.fx) broadcastToMap(player.mapId, { type: 'skillFx', fx: skill.fx, x: player.x, y: player.y - 30 });
   } else if (skill.buffDuration) {
-    player.buffs[key] = { until: now + skill.buffDuration, damageMult: skill.damageMult, speedMult: skill.speedMult };
+    const damageMult = skill.damageMult ? skill.damageMult * scale : skill.damageMult;
+    player.buffs[key] = { until: now + skill.buffDuration, damageMult, speedMult: skill.speedMult };
     send(player.ws, { type: 'notice', text: `${skill.name} aktiv!` });
+    if (skill.fx) broadcastToMap(player.mapId, { type: 'skillFx', fx: skill.fx, x: player.x, y: player.y - 30 });
   } else if (skill.damageMult) {
     const mob = nearestMobInRange(player, skill.range);
-    if (mob) dealDamageToMob(player, mob, Math.floor(player.totalDamage() * skill.damageMult));
+    if (mob) {
+      dealDamageToMob(player, mob, Math.floor(player.totalDamage() * skill.damageMult * scale));
+      if (skill.fx) broadcastToMap(player.mapId, { type: 'skillFx', fx: skill.fx, x: mob.x, y: mob.y - 20 });
+    } else if (skill.fx) {
+      // Kein Ziel getroffen - Effekt trotzdem am Spieler zeigen, damit der Cast sichtbar ist
+      broadcastToMap(player.mapId, { type: 'skillFx', fx: skill.fx, x: player.x, y: player.y - 30 });
+    }
   }
 }
 
@@ -256,7 +280,7 @@ function handleUseItem(player, itemId) {
   if (item.effect === 'mana') player.mp = Math.min(player.maxMp, player.mp + item.amount);
 }
 
-function handleEquip(player, itemId) {
+function handleEquip(player, itemId, targetSlot) {
   const item = ITEMS[itemId];
   if (!item || (item.type !== 'weapon' && item.type !== 'armor')) return;
   if (item.jobReq && item.jobReq !== player.job) {
@@ -264,7 +288,14 @@ function handleEquip(player, itemId) {
     return;
   }
   if (!player.inventory.find(i => i.item === itemId)) return;
-  player.equipment[item.slot] = itemId;
+
+  let slot = item.slot;
+  if (slot === 'ring') {
+    // Ringe haben zwei Plätze: gewünschten Slot nehmen, sonst freien, sonst ring1 überschreiben
+    if (targetSlot === 'ring1' || targetSlot === 'ring2') slot = targetSlot;
+    else slot = !player.equipment.ring1 ? 'ring1' : (!player.equipment.ring2 ? 'ring2' : 'ring1');
+  }
+  player.equipment[slot] = itemId;
 }
 
 function handleUnequip(player, slot) {
