@@ -90,6 +90,7 @@ class Mob {
       maxHp: this.maxHp,
       alive: this.alive,
       direction: this.direction,
+      vx: this.vx,
       hitFlash: Date.now() < this.hitFlashUntil
     };
   }
