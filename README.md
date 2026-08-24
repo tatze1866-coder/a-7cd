@@ -28,7 +28,7 @@ Mehrere Browser-Tabs/Geräte im selben Netzwerk = Multiplayer (Server-IP statt l
 
 ## Inhalt (aktueller Stand)
 
-- 3 Maps mit Portalen: Henesys Field → Kerning Forest → Sleepywood Dungeon
+- 3 Maps mit Portalen: Henesys Field (kompaktes Startfeld, Wald-Panorama als Hintergrund) → Mossy Hollow (vertikaler Moos-Schacht im Hollow-Knight-Stil) → Sleepywood Dungeon
 - 4 Jobs (ab Level 3 wählbar): Warrior, Bowmaster, Thief, Priest – je 5 Skills mit eigenen Pixel-FX beim Cast
 - 6 Mob-Typen mit einfacher KI (Wandern / Aggro-Chase), Respawn-Timer
 - Inventar, Equipment (Waffe + 6 Rüstungsslots + 2 Ringe), Loot-Tabellen pro Mob
