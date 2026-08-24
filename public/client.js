@@ -147,6 +147,33 @@ let tilesetLoaded = false;
 tilesetImg.onload = () => { tilesetLoaded = true; };
 tilesetImg.src = 'assets/platform-tiles.png';
 
+// Mossy-Sprites für Maps mit useMossyTiles (Level 2: hollow-knight-artiger Moos-Schacht)
+const MOSSY_KEYS = [
+  'platform_bar_a', 'platform_bar_b', 'platform_bar_c', 'platform_bar_wide', 'platform_round',
+  'hanging_vine_a', 'hanging_vine_b', 'hanging_moss_a',
+  'boulder_a', 'boulder_b', 'boulder_c', 'spikevine_a', 'spikevine_b',
+  'hill_bg_a', 'hill_bg_b', 'hill_wall_a', 'hill_wall_b'
+];
+const mossyImages = {};
+for (const key of MOSSY_KEYS) {
+  const img = new Image();
+  img.src = `assets/mossy/${key}.png`;
+  mossyImages[key] = img;
+}
+const MOSSY_PLATFORM_SPRITES = ['platform_bar_a', 'platform_bar_b', 'platform_bar_c'];
+
+// Hintergrundbilder pro Map (Panorama, per bgImage-Feld in maps.js referenziert)
+const bgImages = {};
+function getBgImage(path) {
+  if (!path) return null;
+  if (!bgImages[path]) {
+    const img = new Image();
+    img.src = path;
+    bgImages[path] = img;
+  }
+  return bgImages[path];
+}
+
 // Slime-Spritesheet: 6 Farbreihen x 5 Frames (Stand, Walk1, Walk2, Attack, Dead), 32px, nur R-Facing (L wird gespiegelt)
 const SLIME_FRAME = 32;
 const SLIME_COLORS = 6;
@@ -606,13 +633,20 @@ function render() {
 
   ctx.fillStyle = map.bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawBackgroundImage(map);
 
   ctx.save();
   ctx.scale(ZOOM, ZOOM);
   ctx.translate(-camera.x, -camera.y);
 
+  // Deko hinter den Plattformen (Schacht-Silhouette o.ä.)
+  if (map.decorBack) for (const d of map.decorBack) drawDecor(d);
+
   // Plattformen
-  for (const p of map.platforms) drawPlatform(p);
+  for (const p of map.platforms) drawPlatform(p, map);
+
+  // Deko vor den Plattformen (hängende Ranken, Findlinge, Dornranken)
+  if (map.decorFront) for (const d of map.decorFront) drawDecor(d);
 
   // Portale
   ctx.fillStyle = 'rgba(120, 200, 255, 0.55)';
@@ -653,7 +687,30 @@ function render() {
   drawBuffs();
 }
 
-function drawPlatform(p) {
+function drawBackgroundImage(map) {
+  if (!map.bgImage) return;
+  const img = getBgImage(map.bgImage);
+  if (!img || !img.complete || !img.naturalWidth) return;
+  const parallax = 0.35; // Panorama scrollt langsamer als die Welt -> Tiefenwirkung
+  const scale = canvas.height / img.naturalHeight;
+  const drawW = img.naturalWidth * scale;
+  const offsetX = -((camera.x * parallax) % drawW);
+  for (let x = offsetX - drawW; x < canvas.width; x += drawW) {
+    ctx.drawImage(img, x, 0, drawW, canvas.height);
+  }
+}
+
+function drawDecor(d) {
+  const img = mossyImages[d.sprite];
+  if (!img || !img.complete || !img.naturalWidth) return;
+  ctx.drawImage(img, d.x, d.y, d.w, d.h);
+}
+
+function drawPlatform(p, map) {
+  if (map && map.useMossyTiles) {
+    drawMossyPlatform(p);
+    return;
+  }
   if (!tilesetLoaded) {
     // Fallback bevor das Bild geladen ist
     ctx.fillStyle = '#6ab04c';
@@ -683,6 +740,39 @@ function drawPlatform(p) {
       );
     }
   }
+}
+
+// Level 2 (Mossy Hollow): Plattformen als organische Moos-Inseln statt Kachel-Raster.
+// Dünne Ledges bekommen einen einzelnen Moos-Sprite überhängend über die Kante,
+// die dicke Bodenplattform wird aus mehreren breiten Sprites nebeneinander gekachelt.
+function drawMossyPlatform(p) {
+  // Dunkler Unterbau, damit auch dicke Bodenplattformen ohne Lücken wirken
+  ctx.fillStyle = '#0b120d';
+  ctx.fillRect(p.x, p.y, p.w, p.h);
+
+  const isGround = p.h >= 60;
+  if (isGround) {
+    const img = mossyImages['platform_bar_wide'];
+    const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 4.47;
+    const tileW = 480;
+    const tileH = tileW / aspect;
+    for (let x = p.x; x < p.x + p.w; x += tileW * 0.94) {
+      if (img && img.complete && img.naturalWidth) {
+        ctx.drawImage(img, x, p.y - tileH * 0.42, tileW, tileH);
+      }
+    }
+    return;
+  }
+
+  const spriteKey = MOSSY_PLATFORM_SPRITES[Math.abs(Math.floor(p.x / 37)) % MOSSY_PLATFORM_SPRITES.length];
+  const img = mossyImages[spriteKey];
+  if (!img || !img.complete || !img.naturalWidth) return;
+  const aspect = img.naturalWidth / img.naturalHeight;
+  const w = p.w * 1.12;
+  const h = w / aspect;
+  const x = p.x + p.w / 2 - w / 2;
+  const y = p.y - h * 0.5;
+  ctx.drawImage(img, x, y, w, h);
 }
 
 function drawMob(m) {
