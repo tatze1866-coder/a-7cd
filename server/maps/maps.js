@@ -9,39 +9,43 @@ const MAPS = {
   henesys: {
     id: 'henesys',
     name: 'Henesys Field',
-    worldWidth: 1500,
+    worldWidth: 2000,
     worldHeight: 1000,
     bgColor: '#8fd0ff',
     groundColor: '#6ab04c',
     bgImage: 'assets/backgrounds/forest_level1.jpg', // Panorama-Hintergrund (leicht parallax)
     platforms: [
-      { x: 0, y: 800, w: 1500, h: 200 },       // Boden
-      { x: 140, y: 660, w: 200, h: 20 },       // schwebende Plattform
-      { x: 380, y: 590, w: 180, h: 20 },
-      { x: 600, y: 660, w: 200, h: 20 },
-      { x: 840, y: 570, w: 180, h: 20 },
-      { x: 1080, y: 690, w: 180, h: 20 },
-      { x: 1300, y: 600, w: 160, h: 20 }
+      { x: 0, y: 800, w: 2000, h: 200 },       // Boden
+      { x: 160, y: 660, w: 200, h: 20 },       // schwebende Plattform
+      { x: 420, y: 590, w: 180, h: 20 },
+      { x: 660, y: 660, w: 200, h: 20 },
+      { x: 920, y: 570, w: 180, h: 20 },
+      { x: 1160, y: 690, w: 200, h: 20 },
+      { x: 1420, y: 600, w: 180, h: 20 },
+      { x: 1660, y: 670, w: 200, h: 20 },
+      { x: 1840, y: 580, w: 150, h: 20 }
     ],
     spawnPoints: {
       default: { x: 100, y: 800 },
-      fromKerning: { x: 1420, y: 800 }
+      fromKerning: { x: 1920, y: 800 }
     },
     portals: [
-      { x: 1460, y: 700, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
+      { x: 1960, y: 700, w: 40, h: 100, targetMap: 'kerning', targetSpawn: 'default' }
     ],
     mobSpawns: [
       // Boden
       { type: 'slime', x: 300, y: 800, count: 6 },
-      { type: 'slime', x: 900, y: 800, count: 6 },
-      { type: 'slime', x: 1350, y: 800, count: 4 },
+      { type: 'slime', x: 1000, y: 800, count: 6 },
+      { type: 'slime', x: 1700, y: 800, count: 6 },
       // Auf den schwebenden Plattformen
-      { type: 'slime', x: 240, y: 660, count: 2 },
-      { type: 'slime', x: 470, y: 590, count: 1 },
-      { type: 'slime', x: 700, y: 660, count: 2 },
-      { type: 'slime', x: 930, y: 570, count: 1 },
-      { type: 'slime', x: 1170, y: 690, count: 2 },
-      { type: 'slime', x: 1380, y: 600, count: 1 }
+      { type: 'slime', x: 260, y: 660, count: 2 },
+      { type: 'slime', x: 510, y: 590, count: 1 },
+      { type: 'slime', x: 760, y: 660, count: 2 },
+      { type: 'slime', x: 1010, y: 570, count: 1 },
+      { type: 'slime', x: 1260, y: 690, count: 2 },
+      { type: 'slime', x: 1510, y: 600, count: 1 },
+      { type: 'slime', x: 1760, y: 670, count: 2 },
+      { type: 'slime', x: 1910, y: 580, count: 1 }
     ]
   },
 
