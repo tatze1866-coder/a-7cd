@@ -158,10 +158,12 @@ wss.on('connection', (ws) => {
 });
 
 function stripMap(m) {
-  // Client braucht keine mobSpawns-Definition, nur Layout + Portale
+  // Client braucht keine mobSpawns-Definition, nur Layout + Portale + optionale Deko/Optik
   return {
     id: m.id, name: m.name, worldWidth: m.worldWidth, worldHeight: m.worldHeight,
-    bgColor: m.bgColor, groundColor: m.groundColor, platforms: m.platforms, portals: m.portals
+    bgColor: m.bgColor, groundColor: m.groundColor, platforms: m.platforms, portals: m.portals,
+    bgImage: m.bgImage, useMossyTiles: m.useMossyTiles,
+    decorBack: m.decorBack, decorFront: m.decorFront
   };
 }
 
