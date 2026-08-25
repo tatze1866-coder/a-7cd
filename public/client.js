@@ -129,6 +129,11 @@ let currentMapId = null;
 
 let players = [];      // letzter State-Snapshot
 let mobs = [];
+let prevPlayers = [];  // vorheriger State-Snapshot (für Interpolation zwischen Server-Ticks)
+let prevMobs = [];
+let lastStateAt = 0;
+let stateIntervalMs = 50;
+let suppressInterp = true;
 let myInventory = [];
 let myBuffs = [];
 
@@ -245,11 +250,25 @@ function onMessage(evt) {
       buildSkillBar();
       updateMusicForMap(currentMapId);
       break;
-    case 'state':
+    case 'state': {
+      const now = performance.now();
+      if (suppressInterp) {
+        // Frisch verbunden oder gerade Map gewechselt: nicht vom alten/leeren State aus interpolieren
+        prevPlayers = msg.players;
+        prevMobs = msg.mobs;
+        lastStateAt = now;
+        suppressInterp = false;
+      } else {
+        prevPlayers = players;
+        prevMobs = mobs;
+        stateIntervalMs = Math.max(16, Math.min(200, now - lastStateAt));
+        lastStateAt = now;
+      }
       players = msg.players;
       mobs = msg.mobs;
       updateHud();
       break;
+    }
     case 'private':
       myInventory = msg.data.inventory;
       myBuffs = msg.data.buffs;
@@ -257,6 +276,7 @@ function onMessage(evt) {
       break;
     case 'mapChange':
       currentMapId = msg.mapId;
+      suppressInterp = true; // neue Map hat andere Koordinaten -> nicht vom alten State aus interpolieren
       showPopup(`→ ${maps[currentMapId].name}`);
       playSfx('dialogueExpression', { minGapMs: 0 });
       updateMusicForMap(currentMapId);
@@ -605,6 +625,23 @@ function renderCharacterPanel() {
 }
 
 // ====== Rendering ======
+// Glättet die Positionen zwischen zwei Server-Ticks (Server läuft nur mit 20Hz,
+// der Client rendert aber mit bis zu 60fps) -> ohne das wirkt jede Bewegung ruckelig/steif.
+function interpolateEntities(current, prev) {
+  if (!prev || !prev.length) return current;
+  const prevById = new Map();
+  for (const e of prev) prevById.set(e.id, e);
+  const alpha = Math.max(0, Math.min(1.25, (performance.now() - lastStateAt) / stateIntervalMs));
+  return current.map(e => {
+    const pe = prevById.get(e.id);
+    if (!pe) return e; // neu aufgetaucht (z.B. Mob gespawnt) -> sofort an Zielposition zeigen
+    const dx = e.x - pe.x, dy = e.y - pe.y;
+    // Große Sprünge (Respawn, Map-interner Teleport) nicht glätten, sondern hart setzen
+    if (Math.abs(dx) > 200 || Math.abs(dy) > 200) return e;
+    return { ...e, x: pe.x + dx * alpha, y: pe.y + dy * alpha };
+  });
+}
+
 function gameLoop() {
   render();
   requestAnimationFrame(gameLoop);
@@ -617,7 +654,9 @@ function render() {
     return;
   }
   const map = maps[currentMapId];
-  const me = players.find(p => p.id === myId);
+  const renderPlayers = interpolateEntities(players, prevPlayers);
+  const renderMobs = interpolateEntities(mobs, prevMobs);
+  const me = renderPlayers.find(p => p.id === myId);
 
   refreshSkillLabels();
 
@@ -655,10 +694,10 @@ function render() {
   }
 
   // Mobs (nur der aktuellen Map, kommen bereits gefiltert vom Server)
-  for (const m of mobs) drawMob(m);
+  for (const m of renderMobs) drawMob(m);
 
   // Spieler (nur der aktuellen Map)
-  for (const p of players) drawPlayer(p, p.id === myId);
+  for (const p of renderPlayers) drawPlayer(p, p.id === myId);
 
   // Skill-Effekte (über Mobs/Spielern)
   drawEffects();
