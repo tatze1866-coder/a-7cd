@@ -1,5 +1,5 @@
-const GRAVITY = 0.9;
-const MAX_FALL_SPEED = 22;
+const GRAVITY = 1.9;
+const MAX_FALL_SPEED = 26;
 const ENTITY_HALF_WIDTH = 16;
 const ENTITY_HEIGHT = 44;
 
