@@ -13,7 +13,7 @@ const { applyPhysics } = require('./game/Physics');
 
 const PORT = process.env.PORT || 3000;
 const TICK_MS = 50;
-const MOVE_SPEED = 3.2;
+const MOVE_SPEED = 4.4;
 const BASE_ATTACK_COOLDOWN = 550;
 const ATTACK_ANIM_MS = 450; // Dauer der Angriffs-Sprite-Animation im Client
 
@@ -343,7 +343,7 @@ function tick() {
       p.vx = 0;
       if (p.input.left) { p.vx = -speed; p.facing = -1; }
       if (p.input.right) { p.vx = speed; p.facing = 1; }
-      if (p.input.up && p.onGround) { p.vy = -15.5; }
+      if (p.input.up && p.onGround) { p.vy = -19.5; }
 
       applyPhysics(p, mapDef.platforms, mapDef.worldWidth, mapDef.worldHeight);
 
